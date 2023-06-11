@@ -1,4 +1,4 @@
-import styles from "@/components/Home.module.css";
+import styles from "@/components/Home.module.scss";
 import {Tile} from "./Tile";
 
 export function Home() {
