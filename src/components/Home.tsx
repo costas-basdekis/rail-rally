@@ -9,7 +9,7 @@ interface HomeState {
 
 export class Home extends Component<{}, HomeState>{
   state: HomeState = {
-    tile: new rails.Tile([], []),
+    tile: rails.Tile.empty(),
   };
 
   render() {

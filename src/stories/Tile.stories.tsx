@@ -24,14 +24,14 @@ const render = (props: Partial<RTile["props"]>) => {
 export const Empty: Story = {
   render,
   args: {
-    tile: new Tile([], []),
+    tile: Tile.fromConnections([], []),
   },
 };
 
 export const Cross: Story = {
   render,
   args: {
-    tile: new Tile([
+    tile: Tile.fromConnections([
       ["bottom", "top"],
       ["left", "right"],
     ], []),
@@ -41,7 +41,7 @@ export const Cross: Story = {
 export const DiagonalCross: Story = {
   render,
   args: {
-    tile: new Tile([
+    tile: Tile.fromConnections([
       ["top-left", "bottom-right"],
       ["top-right", "bottom-left"],
     ], []),
@@ -51,7 +51,7 @@ export const DiagonalCross: Story = {
 export const OddAngles: Story = {
   render,
   args: {
-    tile: new Tile([
+    tile: Tile.fromConnections([
       ["top", "bottom-left"],
       ["top", "bottom-right"],
       ["bottom", "top-left"],
@@ -67,7 +67,7 @@ export const OddAngles: Story = {
 export const All: Story = {
   render,
   args: {
-    tile: new Tile([
+    tile: Tile.fromConnections([
       ["bottom", "top"],
       ["left", "right"],
       ["top-left", "bottom-right"],
@@ -87,6 +87,6 @@ export const All: Story = {
 export const AllDeadEnd: Story = {
   render,
   args: {
-    tile: new Tile([], connectionDirections),
+    tile: Tile.fromConnections([], connectionDirections),
   },
 };
