@@ -3,7 +3,7 @@
 import React from "react";
 import type {Meta, StoryObj} from '@storybook/react';
 
-import {Tile} from "../components";
+import {Tile} from "@/components";
 
 export default {
   title: 'Components/Tile',
