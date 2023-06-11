@@ -4,21 +4,23 @@ import {Component} from "react";
 import * as rails from "@/rails";
 
 interface HomeState {
-  tile: rails.Tile;
+  grid: rails.Grid,
 }
 
 export class Home extends Component<{}, HomeState>{
   state: HomeState = {
-    tile: rails.Tile.empty(),
+    grid: rails.Grid.fromSize(20, 20),
   };
 
   render() {
-    const {tile} = this.state;
+    const {grid} = this.state;
     return (
       <main className={styles.main}>
         <h1>Rail Rally</h1>
         <svg width={400} height={400} style={{backgroundColor: "white"}}>
-          <RTile tile={tile}/>
+          {Array.from(grid.tiles()).map(tile => (
+            <RTile key={`${tile.x},${tile.y}`} tile={tile} />
+          ))}
         </svg>
         <About/>
       </main>

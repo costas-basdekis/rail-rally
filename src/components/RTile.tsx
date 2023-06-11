@@ -25,7 +25,7 @@ export class RTile extends Component<RTileProps, {}> {
 
   render() {
     const {tile} = this.props;
-    return <g>
+    return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
       <rect x={0} y={0} width={20} height={20} fill={"none"} stroke={"black"} />
       {tile.internalConnections.map(([first, second]) => {
         const firstPosition = this.positionByDirectionMap.get(first)!;

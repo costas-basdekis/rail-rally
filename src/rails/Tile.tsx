@@ -1,19 +1,24 @@
+import {Grid} from "./Grid";
+
 export const connectionDirections = [
   "top", "top-right", "right", "bottom-right", "bottom", "bottom-left", "left", "top-left",
 ] as const;
 export type ConnectionDirection = typeof connectionDirections[number];
 
 export class Tile {
+  grid: Grid;
+  x: number;
+  y: number;
   internalConnections: [ConnectionDirection, ConnectionDirection][] = [];
   deadEndInternalConnections: ConnectionDirection[] = [];
   externalConnections: ConnectionDirection[] = [];
 
   static empty(): Tile {
-    return new Tile();
+    return Grid.fromSize(1, 1).get(0, 0);
   }
 
   static fromConnections(internalConnections: [ConnectionDirection, ConnectionDirection][] = [], deadEndInternalConnections: ConnectionDirection[] = []): Tile {
-    const tile = new Tile();
+    const tile = this.empty();
     for (const connection of internalConnections) {
       tile.addInternalConnection(connection);
     }
@@ -21,6 +26,12 @@ export class Tile {
       tile.addDeadEndInternalConnection(direction);
     }
     return tile;
+  }
+
+  constructor(grid: Grid, x: number, y: number) {
+    this.grid = grid;
+    this.x = x;
+    this.y = y;
   }
 
   canAddInternalConnection([first, second]: [ConnectionDirection, ConnectionDirection]): boolean {
