@@ -1,5 +1,5 @@
 import styles from "@/components/Home.module.scss";
-import {Tile} from "./Tile";
+import {About, Tile} from "@/components";
 
 export function Home() {
   return (
@@ -8,6 +8,7 @@ export function Home() {
       <svg width={400} height={400}>
         <Tile/>
       </svg>
+      <About />
     </main>
   )
 }

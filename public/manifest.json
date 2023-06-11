@@ -1,0 +1,28 @@
+{
+  "short_name": "Rail Rally",
+  "name": "Rail Rally",
+  "icons": [
+    {
+      "src": "./rail-road-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "./rail-road-128.png",
+      "type": "image/png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "./rail-road-32.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    }
+  ],
+  "id": "/",
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#ffffff",
+  "description": "Railroad game/environment"
+}
