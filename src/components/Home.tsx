@@ -1,14 +1,24 @@
 import styles from "@/components/Home.module.scss";
-import {About, Tile} from "@/components";
+import {About, RTile} from "@/components";
 import {Component} from "react";
+import * as rails from "@/rails";
 
-export class Home extends Component<{}, {}>{
+interface HomeState {
+  tile: rails.Tile;
+}
+
+export class Home extends Component<{}, HomeState>{
+  state: HomeState = {
+    tile: new rails.Tile([], []),
+  };
+
   render() {
+    const {tile} = this.state;
     return (
       <main className={styles.main}>
         <h1>Rail Rally</h1>
-        <svg width={400} height={400}>
-          <Tile/>
+        <svg width={400} height={400} style={{backgroundColor: "white"}}>
+          <RTile tile={tile}/>
         </svg>
         <About/>
       </main>
