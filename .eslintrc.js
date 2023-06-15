@@ -29,5 +29,14 @@ module.exports = {
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/no-empty-function": "warn",
     "react/no-unescaped-entities": "off",
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "{}": false
+        },
+        "extendDefaults": true,
+      },
+    ],
   },
 };
