@@ -1,8 +1,13 @@
 import {Component} from "react";
 import * as rails from "@/rails";
+import classNames from "classnames";
+import "./RTile.scss";
 
 interface RTileProps {
   tile: rails.Tile,
+  selected: boolean,
+  connectable: boolean,
+  onTileClick: (tile: rails.Tile) => void,
 }
 
 export interface Position {
@@ -23,10 +28,14 @@ export class RTile extends Component<RTileProps, {}> {
   ]);
   centerPosition: Position = {x: 0.5, y: 0.5};
 
+  // shouldComponentUpdate(): boolean {
+  //   return true;
+  // }
+
   render() {
-    const {tile} = this.props;
-    return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
-      <rect x={0} y={0} width={20} height={20} fill={"none"} stroke={"black"} />
+    const {tile, selected, connectable} = this.props;
+    return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`} onClick={this.onSelectTile}>
+      <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable})} stroke={"black"} />
       {tile.internalConnections.map(([first, second]) => {
         const firstPosition = this.positionByDirectionMap.get(first)!;
         const secondPosition = this.positionByDirectionMap.get(second)!;
@@ -44,7 +53,7 @@ export class RTile extends Component<RTileProps, {}> {
         return (
           <line
             key={direction}
-            x1={this.centerPosition.x * 20} y1={this.centerPosition.y * 20}
+            x1={(this.centerPosition.x * 0.8 + position.x * 0.2) * 20} y1={(this.centerPosition.y * 0.8 + position.y * 0.2) * 20}
             x2={position.x * 20} y2={position.y * 20}
             stroke={"black"}
           />
@@ -52,4 +61,8 @@ export class RTile extends Component<RTileProps, {}> {
       })}
     </g>;
   }
+
+  onSelectTile = () => {
+    this.props.onTileClick(this.props.tile);
+  };
 }

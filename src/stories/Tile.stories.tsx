@@ -87,6 +87,6 @@ export const All: Story = {
 export const AllDeadEnd: Story = {
   render,
   args: {
-    tile: Tile.fromConnections([], connectionDirections),
+    tile: Tile.fromConnections([], connectionDirections.items),
   },
 };

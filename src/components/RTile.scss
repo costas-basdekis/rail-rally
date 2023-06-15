@@ -1,0 +1,19 @@
+.tile {
+  fill: white;
+
+  &:hover {
+    fill: yellow;
+
+    &.connectable {
+      fill: red;
+    }
+  }
+
+  &.selected {
+    fill: blue;
+  }
+
+  &.connectable {
+    fill: green;
+  }
+}

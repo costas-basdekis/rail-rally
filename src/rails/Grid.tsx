@@ -23,11 +23,15 @@ export class Grid {
   }
 
   get(x: number, y: number): Tile {
-    const tile = this.tilesByPosition.get(x)?.get(y);
+    const tile = this.getIfExists(x, y);
     if (!tile) {
       throw new Error(`There's no tile on position ${x}, ${y}`);
     }
     return tile;
+  }
+
+  getIfExists(x: number, y: number): Tile | null {
+    return this.tilesByPosition.get(x)?.get(y) ?? null;
   }
 
   *tiles(): Iterable<Tile> {
@@ -36,5 +40,18 @@ export class Grid {
        yield tile;
      }
    }
+  }
+
+  canConnect([first, second]: [Tile, Tile]): boolean {
+    return first.canConnectTo(second);
+  }
+
+  connect([first, second]: [Tile, Tile]): this {
+    if (!this.canConnect([first, second])) {
+      throw new Error(`Cannot connect ${first.x},${first.y} to ${second.x},${second.y}`);
+    }
+    first.connectTo(second);
+    second.connectTo(first);
+    return this;
   }
 }
