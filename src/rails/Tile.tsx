@@ -132,8 +132,11 @@ export class Tile {
   }
 
   getConnectionRefusalReason(other: Tile, checkOther: boolean = true): string | null {
-    if (checkOther && !other.canConnectTo(this, false)) {
-      return `the other one can't connect to this`;
+    if (checkOther) {
+      const otherRefusalReason = other.getConnectionRefusalReason(this, false);
+      if (otherRefusalReason) {
+        return `the other one can't connect to this: ${otherRefusalReason}`;
+      }
     }
     if (!this.isNextTo(other)) {
       return "they're not next to each other";
