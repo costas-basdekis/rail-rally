@@ -187,10 +187,11 @@ export class Tile {
       return true;
     }
     for (const checkingDirection of directions) {
-      const crossConnections = connectionDirections
-        .otherConnectionsByOffset[checkingDirection][2]
-        .filter(neighbourDirection => directions.includes(neighbourDirection));
-      if (crossConnections.length !== 2) {
+      const crossConnections = [
+          ...connectionDirections.otherConnectionsByOffset[checkingDirection][2],
+          ...connectionDirections.otherConnectionsByOffset[checkingDirection][4],
+        ].filter(neighbourDirection => directions.includes(neighbourDirection));
+      if (crossConnections.length < 2) {
         return false;
       }
     }
