@@ -30,6 +30,10 @@ export class Tile {
     this.y = y;
   }
 
+  get positionStr(): string {
+    return `${this.x},${this.y}`;
+  }
+
   canAddInternalConnection([first, second]: [ConnectionDirection, ConnectionDirection]): boolean {
     if (first === second) {
       throw new Error("Cannot add connection with same start and end");
@@ -114,7 +118,7 @@ export class Tile {
   getDirectionOfTile(other: Tile): ConnectionDirection {
     const direction = this.offsetDirectionMap.get(other.x - this.x)?.get(other.y - this.y);
     if (!direction) {
-      throw new Error(`Tile ${other.x},${other.y} is not next to ${this.x},${this.y}`);
+      throw new Error(`Tile ${other.positionStr} is not next to ${this.positionStr}`);
     }
     return direction;
   }
@@ -132,7 +136,7 @@ export class Tile {
 
   connectTo(other: Tile): this {
     if (!this.canConnectTo(other)) {
-      throw new Error(`Tile ${this.x},${this.y} cannot connect to ${other.x},${other.y}`);
+      throw new Error(`Tile ${this.positionStr} cannot connect to ${other.positionStr}`);
     }
     this.addDeadEndInternalConnection(this.getDirectionOfTile(other));
     return this;

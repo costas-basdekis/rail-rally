@@ -22,7 +22,7 @@ export class RGrid extends Component<RGridProps, RGridState> {
     const {selectedTile, connectableTiles} = this.state;
     return Array.from(grid.tiles()).map(tile => (
       <RTile
-        key={`${tile.x},${tile.y}`}
+        key={tile.positionStr}
         tile={tile}
         selected={selectedTile === tile}
         connectable={connectableTiles.includes(tile)}

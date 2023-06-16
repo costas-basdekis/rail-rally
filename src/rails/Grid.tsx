@@ -48,7 +48,7 @@ export class Grid {
 
   connect([first, second]: [Tile, Tile]): this {
     if (!this.canConnect([first, second])) {
-      throw new Error(`Cannot connect ${first.x},${first.y} to ${second.x},${second.y}`);
+      throw new Error(`Cannot connect ${first.positionStr} to ${second.positionStr}`);
     }
     first.connectTo(second);
     second.connectTo(first);
