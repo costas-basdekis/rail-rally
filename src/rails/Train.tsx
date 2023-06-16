@@ -103,8 +103,10 @@ export class Train {
     this.nextTile = init.nextTile;
   }
 
-  animate(grid: Grid): Train {
-    const connectionProgress = Math.min(this.connectionLength, this.connectionProgress + 2);
+  animate(grid: Grid, connectionProgressIncrement: number = 2): Train {
+    const connectionProgressTarget = this.connectionProgress + connectionProgressIncrement;
+    const connectionProgress = Math.min(this.connectionLength, connectionProgressTarget);
+    const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
     const newProgress = connectionProgress / this.connectionLength;
     const pointPosition = Train.interpolatePoint(this.startPosition, this.targetPosition, newProgress);
     let train = new Train({
@@ -119,6 +121,10 @@ export class Train {
     });
     if (newProgress === 1) {
       train = train.getNext(grid);
+      // TODO: if we didn't manage to make any progress, we should worry
+      if (connectionProgressLeftover && connectionProgressLeftover < connectionProgressTarget) {
+        train = train.animate(grid, connectionProgressLeftover);
+      }
     }
     return train;
   }
