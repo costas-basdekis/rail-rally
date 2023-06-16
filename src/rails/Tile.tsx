@@ -161,15 +161,48 @@ export class Tile {
     if (neighbourConnections.length > 2) {
       // This should be impossible
       return `this has too many neighbour directions (${neighbourConnections.length})`;
-    } else if (neighbourConnections.length == 2) {
-      const crossConnections = connectionDirections
-        .otherConnectionsByOffset[direction][2]
-        .filter(neighbourDirection => this.hasExternalConnection(neighbourDirection));
-      if (crossConnections.length !== 2) {
-        return `this has 2 neighbour directions, and not both are the cross ones`;
-      }
+    }
+    const checkingDirections = [
+      direction,
+      ...this.externalConnections,
+    ];
+    if (!this.canDirectionsBeNeighbours(checkingDirections)) {
+      return `there will be too many non-cross neighbour connections`;
     }
     return null;
+  }
+
+  canDirectionsBeNeighbours(directions: ConnectionDirection[]): boolean {
+    return Tile.canDirectionsBeNeighbours(directions);
+  }
+
+  static canDirectionsBeNeighbours(directions: ConnectionDirection[]): boolean {
+    if (directions.length < 3) {
+      return true;
+    }
+    if (!this.areAllDirectionsNeighbours(directions)) {
+      return true;
+    }
+    for (const checkingDirection of directions) {
+      const crossConnections = connectionDirections
+        .otherConnectionsByOffset[checkingDirection][2]
+        .filter(neighbourDirection => directions.includes(neighbourDirection));
+      if (crossConnections.length !== 2) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
+    return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
+  }
+
+  static areTwoDirectionsNeighbours(first: ConnectionDirection, second: ConnectionDirection): boolean {
+    return [
+      ...connectionDirections.otherConnectionsByOffset[first][1],
+      ...connectionDirections.otherConnectionsByOffset[first][2],
+    ].includes(second);
   }
 
   connectTo(other: Tile, check: boolean = true): this {
