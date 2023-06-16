@@ -31,7 +31,7 @@ class Train {
   static startFromTileAndDeadEndDirection(tile: rails.Tile, outgoingDirection: rails.ConnectionDirection, grid: rails.Grid): Train {
     const direction = outgoingDirection;
     const startPosition = {x: (tile.x + 0.5) * 20, y: (tile.y + 0.5) * 20};
-    const directionOffset = RTile.positionByDirectionMap.get(direction)!;
+    const directionOffset = rails.connectionDirections.positionByDirectionMap.get(direction)!;
     const targetPosition = {x: (tile.x + directionOffset.x) * 20, y: (tile.y + directionOffset.y) * 20};
     return new Train({
       startPosition,
@@ -46,13 +46,13 @@ class Train {
   }
 
   static startFromTileDirection(tile: rails.Tile, incomingDirection: rails.ConnectionDirection, grid: rails.Grid): Train {
-    const startDirectionOffset = RTile.positionByDirectionMap.get(incomingDirection)!;
+    const startDirectionOffset = rails.connectionDirections.positionByDirectionMap.get(incomingDirection)!;
     const startPosition = {x: (tile.x + startDirectionOffset.x) * 20, y: (tile.y + startDirectionOffset.y) * 20};
     const targetDirections = tile.getConnectionsFrom(incomingDirection);
     let targetPosition: rails.Position, direction: rails.ConnectionDirection, nextTile: rails.Tile | null;
     if (targetDirections.length) {
       direction = targetDirections[_.random(0, targetDirections.length - 1)];
-      const targetDirectionOffset = RTile.positionByDirectionMap.get(direction)!;
+      const targetDirectionOffset = rails.connectionDirections.positionByDirectionMap.get(direction)!;
       targetPosition = {x: (tile.x + targetDirectionOffset.x) * 20, y: (tile.y + targetDirectionOffset.y) * 20};
       nextTile = grid.getTileInDirection(tile, direction);
     } else {

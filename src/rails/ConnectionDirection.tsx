@@ -12,6 +12,7 @@ const items = [
 export const connectionDirections: {
   items: ConnectionDirection[],
   offsetMap: {[key: ConnectionDirection]: Position},
+  positionByDirectionMap: Map<ConnectionDirection, Position>,
   oppositeMap: { [key: ConnectionDirection]: ConnectionDirection },
   connectableDirections: {[key: ConnectionDirection]: ConnectionDirection[]},
   otherConnectionsByOffset: {[key: ConnectionDirection]: {[key: number]: ConnectionDirection[]}},
@@ -30,6 +31,16 @@ export const connectionDirections: {
     left: {x: -1, y: 0},
     "top-left": {x: -1, y: -1},
   },
+  positionByDirectionMap: new Map([
+    ["top", {x: 0.5, y: 0}],
+    ["bottom", {x: 0.5, y: 1}],
+    ["left", {x: 0, y: 0.5}],
+    ["right", {x: 1, y: 0.5}],
+    ["top-left", {x: 0, y: 0}],
+    ["top-right", {x: 1, y: 0}],
+    ["bottom-right", {x: 1, y: 1}],
+    ["bottom-left", {x: 0, y: 1}],
+  ]),
   oppositeMap: Object.fromEntries(items.map((direction, index) => [direction, items[(index + 4) % 8]])),
   connectableDirections: Object.fromEntries(items.map((direction, index) => [
     direction,
