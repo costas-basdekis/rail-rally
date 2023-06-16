@@ -23,4 +23,6 @@ export const connectionDirections: {
     ] as const)),
   ] as const)),
 };
-export type ConnectionDirection = typeof connectionDirections.items[number];
+export type ConnectionDirection = (
+  "top" | "top-right" | "right" | "bottom-right" | "bottom" | "bottom-left" | "left" | "top-left"
+);
