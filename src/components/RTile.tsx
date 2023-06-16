@@ -25,7 +25,7 @@ export class RTile extends Component<RTileProps, {}> {
   render() {
     const {tile, selected, connectable} = this.props;
     return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`} onClick={this.onSelectTile}>
-      <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable})} stroke={"black"} />
+      <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable})} />
       {tile.internalConnections.map(([first, second]) => {
         const firstPosition = rails.connectionDirections.positionByDirectionMap.get(first)!;
         const secondPosition = rails.connectionDirections.positionByDirectionMap.get(second)!;

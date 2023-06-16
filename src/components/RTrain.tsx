@@ -1,5 +1,6 @@
 import {Component} from "react";
 import * as rails from "@/rails";
+import "./RTrain.scss";
 
 interface RTrainProps {
   grid: rails.Grid,
@@ -29,7 +30,7 @@ export class RTrain extends Component<RTrainProps, {}> {
     }
 
     return (
-      <circle cx={train.pointPosition.x} cy={train.pointPosition.y} r={3} fill={"red"} />
+      <circle cx={train.pointPosition.x} cy={train.pointPosition.y} r={3} className={"train"} />
     );
   }
 
