@@ -52,7 +52,7 @@ export class RTile extends Component<RTileProps, {}> {
         const position = this.positionByDirectionMap.get(direction)!;
         return (
           <line
-            key={direction}
+            key={direction.toString()}
             x1={(this.centerPosition.x * 0.8 + position.x * 0.2) * 20} y1={(this.centerPosition.y * 0.8 + position.y * 0.2) * 20}
             x2={position.x * 20} y2={position.y * 20}
             stroke={"black"}
