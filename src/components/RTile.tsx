@@ -16,7 +16,7 @@ export interface Position {
 }
 
 export class RTile extends Component<RTileProps, {}> {
-  positionByDirectionMap: Map<rails.ConnectionDirection, Position> = new Map([
+  static positionByDirectionMap: Map<rails.ConnectionDirection, Position> = new Map([
     ["top", {x: 0.5, y: 0}],
     ["bottom", {x: 0.5, y: 1}],
     ["left", {x: 0, y: 0.5}],
@@ -37,8 +37,8 @@ export class RTile extends Component<RTileProps, {}> {
     return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`} onClick={this.onSelectTile}>
       <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable})} stroke={"black"} />
       {tile.internalConnections.map(([first, second]) => {
-        const firstPosition = this.positionByDirectionMap.get(first)!;
-        const secondPosition = this.positionByDirectionMap.get(second)!;
+        const firstPosition = RTile.positionByDirectionMap.get(first)!;
+        const secondPosition = RTile.positionByDirectionMap.get(second)!;
         return (
           <line
             key={`${first}:${second}`}
@@ -49,7 +49,7 @@ export class RTile extends Component<RTileProps, {}> {
         );
       })}
       {tile.deadEndInternalConnections.map(direction => {
-        const position = this.positionByDirectionMap.get(direction)!;
+        const position = RTile.positionByDirectionMap.get(direction)!;
         return (
           <line
             key={direction}

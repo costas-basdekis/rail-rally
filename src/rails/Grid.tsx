@@ -1,5 +1,6 @@
 import _ from "underscore";
 import {Tile} from "@/rails/Tile";
+import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
 
 export class Grid {
   width: number;
@@ -53,5 +54,10 @@ export class Grid {
     first.connectTo(second, false);
     second.connectTo(first, false);
     return this;
+  }
+
+  getTileInDirection(tile: Tile, direction: ConnectionDirection): Tile | null {
+    const {x, y} = connectionDirections.getTilePositionInDirection(tile, direction);
+    return this.getIfExists(x, y);
   }
 }

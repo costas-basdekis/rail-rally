@@ -183,7 +183,7 @@ export class Tile {
     if (directions.length < 3) {
       return true;
     }
-    if (!this.areAllDirectionsNeighbours(directions)) {
+    if (!connectionDirections.areAllDirectionsNeighbours(directions)) {
       return true;
     }
     for (const checkingDirection of directions) {
@@ -196,17 +196,6 @@ export class Tile {
       }
     }
     return true;
-  }
-
-  static areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
-    return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
-  }
-
-  static areTwoDirectionsNeighbours(first: ConnectionDirection, second: ConnectionDirection): boolean {
-    return [
-      ...connectionDirections.otherConnectionsByOffset[first][1],
-      ...connectionDirections.otherConnectionsByOffset[first][2],
-    ].includes(second);
   }
 
   connectTo(other: Tile, check: boolean = true): this {
@@ -242,5 +231,11 @@ export class Tile {
       }
     }
     return others;
+  }
+
+  getConnectionsFrom(direction: ConnectionDirection): ConnectionDirection[] {
+    return this.internalConnections
+      .filter(connection => connection.includes(direction))
+      .map(([first, second]) => first === direction ? second : first);
   }
 }
