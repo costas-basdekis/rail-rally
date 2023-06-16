@@ -30,7 +30,7 @@ export class RTrain extends Component<RTrainProps, {}> {
     }
 
     return (
-      <circle cx={train.pointPosition.x} cy={train.pointPosition.y} r={3} className={"train"} />
+      <circle cx={train.pointPosition.x * 20} cy={train.pointPosition.y * 20} r={3} className={"train"} />
     );
   }
 

@@ -29,9 +29,9 @@ export class Train {
 
   static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid): Train {
     const direction = outgoingDirection;
-    const startPosition = {x: (tile.x + 0.5) * 20, y: (tile.y + 0.5) * 20};
+    const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
     const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-    const targetPosition = {x: (tile.x + directionOffset.x) * 20, y: (tile.y + directionOffset.y) * 20};
+    const targetPosition = {x: tile.x + directionOffset.x, y: tile.y + directionOffset.y};
     return new Train({
       startPosition,
       targetPosition,
@@ -46,16 +46,16 @@ export class Train {
 
   static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid): Train {
     const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
-    const startPosition = {x: (tile.x + startDirectionOffset.x) * 20, y: (tile.y + startDirectionOffset.y) * 20};
+    const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
     const targetDirections = tile.getConnectionsFrom(incomingDirection);
     let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null;
     if (targetDirections.length) {
       direction = targetDirections[_.random(0, targetDirections.length - 1)];
       const targetDirectionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-      targetPosition = {x: (tile.x + targetDirectionOffset.x) * 20, y: (tile.y + targetDirectionOffset.y) * 20};
+      targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
       nextTile = grid.getTileInDirection(tile, direction);
     } else {
-      targetPosition = {x: (tile.x + 0.5) * 20, y: (tile.y + 0.5) * 20};
+      targetPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
       direction = connectionDirections.oppositeMap[incomingDirection];
       nextTile = null;
     }
@@ -103,7 +103,7 @@ export class Train {
     this.nextTile = init.nextTile;
   }
 
-  animate(grid: Grid, connectionProgressIncrement: number = 2): Train {
+  animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
     const connectionProgressTarget = this.connectionProgress + connectionProgressIncrement;
     const connectionProgress = Math.min(this.connectionLength, connectionProgressTarget);
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
