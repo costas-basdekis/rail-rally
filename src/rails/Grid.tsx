@@ -50,8 +50,8 @@ export class Grid {
     if (!this.canConnect([first, second])) {
       throw new Error(`Cannot connect ${first.positionStr} to ${second.positionStr}`);
     }
-    first.connectTo(second);
-    second.connectTo(first);
+    first.connectTo(second, false);
+    second.connectTo(first, false);
     return this;
   }
 }

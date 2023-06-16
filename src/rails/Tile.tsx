@@ -1,5 +1,5 @@
 import {Grid} from "./Grid";
-import {ConnectionDirection} from "./ConnectionDirection";
+import {ConnectionDirection, connectionDirections} from "./ConnectionDirection";
 
 export class Tile {
   grid: Grid;
@@ -123,22 +123,67 @@ export class Tile {
     return direction;
   }
 
-  canConnectTo(other: Tile): boolean {
-    if (!this.isNextTo(other)) {
-      return false;
-    }
-    const direction = this.getDirectionOfTile(other);
-    if (this.hasExternalConnection(direction)) {
-      return false;
-    }
-    return true;
+  canConnectTo(other: Tile, checkOther: boolean = true): boolean {
+    const refusalReason = this.getConnectionRefusalReason(other, checkOther);
+    // if (refusalReason) {
+    //   console.log(`Can't connect ${this.positionStr} to ${other.positionStr}, since ${refusalReason}`);
+    // }
+    return refusalReason === null;
   }
 
-  connectTo(other: Tile): this {
-    if (!this.canConnectTo(other)) {
+  getConnectionRefusalReason(other: Tile, checkOther: boolean = true): string | null {
+    if (checkOther && !other.canConnectTo(this, false)) {
+      return `the other one can't connect to this`;
+    }
+    if (!this.isNextTo(other)) {
+      return "they're not next to each other";
+    }
+    const direction = this.getDirectionOfTile(other);
+    if (this.externalConnections.length === 3) {
+      const crossDirections = [
+        ...connectionDirections.otherConnectionsByOffset[direction][2],
+        ...connectionDirections.otherConnectionsByOffset[direction][4],
+      ];
+      if (crossDirections.length !== 3 || crossDirections.some(item => !this.externalConnections.includes(item))) {
+        return `this already has too many external non-cross connections (${this.externalConnections.length}, max 3)`;
+      }
+    }
+    if (this.externalConnections.length >= 4) {
+      return `this already has too many external connections (${this.externalConnections.length}, max 4)`;
+    }
+    if (this.hasExternalConnection(direction)) {
+      return `there is already a '${direction}' external connection`;
+    }
+    const neighbourConnections = [
+      ...connectionDirections.otherConnectionsByOffset[direction][1],
+      ...connectionDirections.otherConnectionsByOffset[direction][2],
+    ].filter(neighbourDirection => this.hasExternalConnection(neighbourDirection));
+    if (neighbourConnections.length > 2) {
+      // This should be impossible
+      return `this has too many neighbour directions (${neighbourConnections.length})`;
+    } else if (neighbourConnections.length == 2) {
+      const crossConnections = connectionDirections
+        .otherConnectionsByOffset[direction][2]
+        .filter(neighbourDirection => this.hasExternalConnection(neighbourDirection));
+      if (crossConnections.length !== 2) {
+        return `this has 2 neighbour directions, and not both are the cross ones`;
+      }
+    }
+    return null;
+  }
+
+  connectTo(other: Tile, check: boolean = true): this {
+    if (check && !this.canConnectTo(other)) {
       throw new Error(`Tile ${this.positionStr} cannot connect to ${other.positionStr}`);
     }
     this.addDeadEndInternalConnection(this.getDirectionOfTile(other));
+    const direction = this.getDirectionOfTile(other);
+    const oppositeConnections = connectionDirections
+      .connectableDirections[direction]
+      .filter(connectableDirection => this.externalConnections.includes(connectableDirection));
+    for (const connectableDirection of oppositeConnections) {
+      this.addInternalConnection([direction, connectableDirection]);
+    }
     return this;
   }
 
