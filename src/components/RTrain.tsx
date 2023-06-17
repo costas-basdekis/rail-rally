@@ -36,7 +36,10 @@ export class RTrain extends Component<RTrainProps, {}> {
     </>;
   }
 
-  startRecheckTrain() {
+  startRecheckTrain(soft: boolean = true) {
+    if (soft && this.recheckTrainInterval) {
+      return;
+    }
     this.stopRecheckTrain();
     this.recheckTrainInterval = window.setInterval(this.recheckTrain, 100);
   }
@@ -65,7 +68,10 @@ export class RTrain extends Component<RTrainProps, {}> {
     this.startTrainAnimation();
   };
 
-  startTrainAnimation() {
+  startTrainAnimation(soft: boolean = true) {
+    if (soft && this.animateTrainInterval) {
+      return;
+    }
     this.stopTrainAnimation();
     this.animateTrainInterval = window.setInterval(this.animateTrain, 100);
   }
