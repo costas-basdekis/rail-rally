@@ -24,17 +24,13 @@ class RTileBackground extends Component<RTileProps, {}> {
 
 class RTileConnections extends Component<{tile: rails.Tile}, {}> {
   centerPosition: rails.Position = {x: 0.5, y: 0.5};
-  arcRadius = Math.sqrt(2);
 
   render() {
     const {tile} = this.props;
     return (
       <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
         {tile.internalConnections.map(([first, second]) => {
-          const [edge, corner] = first.includes("-")
-            ? [second, first] as const
-            : [first, second] as const;
-          const arcConfiguration = rails.connectionDirections.arcMap[edge]?.[corner];
+          const arcConfiguration = rails.connectionDirections.arcConfigurationMap[first]?.[second];
           if (!arcConfiguration) {
             const firstPosition = rails.connectionDirections.positionByDirectionMap.get(first)!;
             const secondPosition = rails.connectionDirections.positionByDirectionMap.get(second)!;
@@ -47,16 +43,15 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
               />
             );
           }
-          const {angle, sweep, offsetX, offsetY} = arcConfiguration;
+          const {edge, corner, sweep, arcRadius} = arcConfiguration;
           const edgePosition = rails.connectionDirections.positionByDirectionMap.get(edge)!
-          const endX = (edgePosition.x + offsetX) * 20 + 20 * this.arcRadius * Math.cos(angle);
-          const endY = (edgePosition.y + offsetY) * 20 + 20 * this.arcRadius * Math.sin(angle);
+          const cornerPosition = rails.connectionDirections.positionByDirectionMap.get(corner)!
           return (
             <path
               key={`${first}:${second}`}
               d={[
                 `M ${edgePosition.x * 20} ${edgePosition.y * 20}`,
-                `A ${20 * this.arcRadius} ${20 * this.arcRadius} 0 0 ${sweep ? 1 : 0} ${endX} ${endY}`,
+                `A ${20 * arcRadius} ${20 * arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x * 20} ${cornerPosition.y * 20}`,
               ].join(" ")}
               stroke={"black"}
               fill={"none"}
