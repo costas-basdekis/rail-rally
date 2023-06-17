@@ -17,6 +17,15 @@ export class RTrain extends Component<RTrainProps, {}> {
     this.startRecheckTrain();
   }
 
+  componentDidUpdate(prevProps: Readonly<RTrainProps>) {
+    if (this.props.train === null && prevProps.train !== null) {
+      this.startRecheckTrain();
+    }
+    if (this.props.train !== null && prevProps.train === null) {
+      this.stopRecheckTrain();
+    }
+  }
+
   componentWillUnmount() {
     this.stopRecheckTrain();
     this.stopTrainAnimation();
@@ -91,8 +100,10 @@ export class RTrain extends Component<RTrainProps, {}> {
     const {grid, train} = this.props;
     if (!train) {
       this.stopTrainAnimation();
+      this.startRecheckTrain();
       return;
     }
+    this.stopRecheckTrain();
 
     this.props.onTrainUpdate(this.props.id, train.animate(grid));
   };
