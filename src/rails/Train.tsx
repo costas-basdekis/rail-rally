@@ -14,11 +14,24 @@ export class Train {
   nextTile: Tile | null;
 
   static startNew(grid: Grid): Train | null {
+    return this.startNewFromDeadEnd(grid) ?? this.startNewFromConnection(grid);
+  }
+
+  static startNewFromDeadEnd(grid: Grid): Train | null {
     const tilesWithDeadEndConnections = Array.from(grid.tiles()).filter(tile => tile.deadEndInternalConnections.length);
     if (!tilesWithDeadEndConnections.length) {
       return null;
     }
     const tile = tilesWithDeadEndConnections[_.random(0, tilesWithDeadEndConnections.length - 1)];
+    return this.startFromTile(tile, grid);
+  }
+
+  static startNewFromConnection(grid: Grid): Train | null {
+    const tilesWithConnections = Array.from(grid.tiles()).filter(tile => tile.externalConnections.length);
+    if (!tilesWithConnections.length) {
+      return null;
+    }
+    const tile = tilesWithConnections[_.random(0, tilesWithConnections.length - 1)];
     return this.startFromTile(tile, grid);
   }
 
