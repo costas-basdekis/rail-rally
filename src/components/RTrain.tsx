@@ -4,8 +4,9 @@ import "./RTrain.scss";
 
 interface RTrainProps {
   grid: rails.Grid,
+  id: number
   train: rails.Train | null,
-  onTrainUpdate: (train: rails.Train | null) => void,
+  onTrainUpdate: (id: number, train: rails.Train) => void,
 }
 
 export class RTrain extends Component<RTrainProps, {}> {
@@ -46,7 +47,7 @@ export class RTrain extends Component<RTrainProps, {}> {
     if (!train) {
       return;
     }
-    this.props.onTrainUpdate(train);
+    this.props.onTrainUpdate(this.props.id, train);
     this.startTrainAnimation();
   };
 
@@ -73,6 +74,6 @@ export class RTrain extends Component<RTrainProps, {}> {
       return;
     }
 
-    this.props.onTrainUpdate(train.animate(grid));
+    this.props.onTrainUpdate(this.props.id, train.animate(grid));
   };
 }
