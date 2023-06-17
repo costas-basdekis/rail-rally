@@ -14,14 +14,11 @@ export class RTrain extends Component<RTrainProps, {}> {
   animateTrainInterval: number | null = null;
 
   componentDidMount() {
-    this.recheckTrainInterval = window.setInterval(this.recheckTrain, 1000);
+    this.startRecheckTrain();
   }
 
   componentWillUnmount() {
-    if (this.recheckTrainInterval) {
-      window.clearInterval(this.recheckTrainInterval);
-      this.recheckTrainInterval = null;
-    }
+    this.stopRecheckTrain();
   }
 
   render() {
@@ -36,6 +33,19 @@ export class RTrain extends Component<RTrainProps, {}> {
         <circle key={index} cx={position.x * 20} cy={position.y * 20} r={2} className={"train"} />
       ))}
     </>;
+  }
+
+  startRecheckTrain() {
+    this.stopRecheckTrain();
+    this.recheckTrainInterval = window.setInterval(this.recheckTrain, 100);
+  }
+
+  stopRecheckTrain() {
+    if (!this.recheckTrainInterval) {
+      return;
+    }
+    window.clearInterval(this.recheckTrainInterval);
+    this.recheckTrainInterval = null;
   }
 
   recheckTrain = () => {
