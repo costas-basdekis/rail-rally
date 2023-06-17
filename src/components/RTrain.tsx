@@ -19,6 +19,7 @@ export class RTrain extends Component<RTrainProps, {}> {
 
   componentWillUnmount() {
     this.stopRecheckTrain();
+    this.stopTrainAnimation();
   }
 
   render() {
