@@ -4,6 +4,7 @@ import classNames from "classnames";
 import "./RTile.scss";
 
 interface RTileProps {
+  editable?: boolean | undefined,
   tile: rails.Tile,
   selected: boolean,
   connectable: boolean,
@@ -23,9 +24,9 @@ export class RTile extends Component<RTileProps, {}> {
   // }
 
   render() {
-    const {tile, selected, connectable} = this.props;
-    return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`} onClick={this.onSelectTile}>
-      <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable})} />
+    const {tile, selected, connectable, editable} = this.props;
+    return <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`} onClick={(editable ?? true) ? this.onSelectTile : undefined}>
+      <rect x={0} y={0} width={20} height={20} className={classNames("tile", {selected, connectable, editable: editable ?? true})} />
       {tile.internalConnections.map(([first, second]) => {
         const firstPosition = rails.connectionDirections.positionByDirectionMap.get(first)!;
         const secondPosition = rails.connectionDirections.positionByDirectionMap.get(second)!;

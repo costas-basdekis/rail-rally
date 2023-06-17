@@ -4,6 +4,7 @@ import * as rails from "@/rails";
 
 interface RGridProps {
   grid: rails.Grid,
+  editable?: boolean | undefined,
 }
 
 interface RGridState {
@@ -18,11 +19,12 @@ export class RGrid extends Component<RGridProps, RGridState> {
   };
 
   render() {
-    const {grid} = this.props;
+    const {grid, editable} = this.props;
     const {selectedTile, connectableTiles} = this.state;
     return Array.from(grid.tiles()).map(tile => (
       <RTile
         key={tile.positionStr}
+        editable={editable}
         tile={tile}
         selected={selectedTile === tile}
         connectable={connectableTiles.includes(tile)}

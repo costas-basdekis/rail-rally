@@ -2,7 +2,7 @@
   fill: white;
   stroke: lightgray;
 
-  &:hover {
+  &.editable:hover {
     fill: yellow;
 
     &.connectable {
