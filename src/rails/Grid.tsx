@@ -61,12 +61,36 @@ export class Grid {
     return first.canConnectTo(second);
   }
 
-  connect([first, second]: [Tile, Tile]): this {
+  connect([firstOrPosition, secondOrPosition]: [Tile | Position, Tile | Position]): this {
+    let first: Tile, second: Tile;
+    if (firstOrPosition instanceof Tile) {
+      first = firstOrPosition;
+    } else {
+      first = this.get(firstOrPosition.x, firstOrPosition.y);
+    }
+    if (secondOrPosition instanceof Tile) {
+      second = secondOrPosition;
+    } else {
+      second = this.get(secondOrPosition.x, secondOrPosition.y);
+    }
     if (!this.canConnect([first, second])) {
       throw new Error(`Cannot connect ${first.positionStr} to ${second.positionStr}`);
     }
     first.connectTo(second, false);
     second.connectTo(first, false);
+    return this;
+  }
+
+  connectMany(tilesOrPositions: (Tile | Position)[], closeLoop: boolean = false): this {
+    if (!tilesOrPositions.length) {
+      return this;
+    }
+    for (const index of _.range(tilesOrPositions.length - 1)) {
+      this.connect([tilesOrPositions[index], tilesOrPositions[index + 1]]);
+    }
+    if (closeLoop && tilesOrPositions.length > 2) {
+      this.connect([tilesOrPositions[tilesOrPositions.length - 1], tilesOrPositions[0]]);
+    }
     return this;
   }
 
