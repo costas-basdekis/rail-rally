@@ -1,6 +1,12 @@
 import _ from "underscore";
 import {Tile} from "@/rails/Tile";
-import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
+import {ConnectionDirection, connectionDirections, Position} from "@/rails/ConnectionDirection";
+
+export interface SerialisedGrid {
+  width: number;
+  height: number;
+  connections: { from: Position, to: Position }[];
+}
 
 export class Grid {
   width: number;
@@ -14,6 +20,14 @@ export class Grid {
         grid.tilesByPosition.set(x, grid.tilesByPosition.get(x) ?? new Map());
         grid.tilesByPosition.get(x)!.set(y, new Tile(this, x, y));
       }
+    }
+    return grid;
+  }
+
+  static deserialise(serialised: SerialisedGrid): Grid {
+    const grid = this.fromSize(serialised.width, serialised.height);
+    for (const {from, to} of serialised.connections) {
+      grid.connect([grid.get(from.x, from.y), grid.get(to.x, to.y)]);
     }
     return grid;
   }
@@ -59,5 +73,43 @@ export class Grid {
   getTileInDirection(tile: Tile, direction: ConnectionDirection): Tile | null {
     const {x, y} = connectionDirections.getTilePositionInDirection(tile, direction);
     return this.getIfExists(x, y);
+  }
+
+  serialise(): SerialisedGrid {
+    const positionStrMap: {[key: string]: Tile} = {};
+    const connectionMap: {[key: string]: {from: Tile, to: Tile}} = {};
+    const connectionCount: {[key: string]: number} = {};
+    for (const tile of this.tiles()) {
+      if (!tile.externalConnections.length) {
+        continue;
+      }
+      positionStrMap[tile.positionStr] = tile;
+      for (const direction of tile.externalConnections) {
+        const otherTile = this.getTileInDirection(tile, direction);
+        if (!otherTile) {
+          throw new Error(`Tile ${tile.positionStr} did not have a neighbour at direction ${direction}`);
+        }
+        const connectionKey = [tile.positionStr, otherTile.positionStr].sort().join(":");
+        if (!(connectionKey in connectionMap)) {
+          connectionMap[connectionKey] = {from: tile, to: otherTile};
+        }
+        connectionCount[connectionKey] = (connectionCount[connectionKey] ?? 0) + 1;
+      }
+    }
+    const mismatchedConnections = Object.entries(connectionCount).filter(([, count]) => count != 2);
+    if (mismatchedConnections.length) {
+      throw new Error(
+        `Some connections weren't present in exactly 2 tiles: `
+        + `${mismatchedConnections.map(([key, count]) => `${key}: ${count} times`).join(", ")}`
+      );
+    }
+    return {
+      width: this.width,
+      height: this.height,
+      connections: Object.values(connectionMap).map(({from, to}) => ({
+        from: {x: from.x, y: from.y},
+        to: {x: to.x, y: to.y},
+      })),
+    };
   }
 }

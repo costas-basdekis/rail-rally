@@ -1,5 +1,5 @@
 import styles from "@/components/Home.module.scss";
-import {About, RGrid, RTrain} from "@/components";
+import {About, RGrid, RSerialisedGrids, RTrain} from "@/components";
 import {Component} from "react";
 import * as rails from "@/rails";
 
@@ -19,6 +19,7 @@ export class Home extends Component<object, HomeState>{
     return (
       <main className={styles.main}>
         <h1>Rail Rally</h1>
+        <RSerialisedGrids grid={grid} onGridUpdate={this.onGridUpdate} />
         <svg width={400} height={400} style={{backgroundColor: "white"}}>
           <RGrid grid={grid} />
           <RTrain grid={grid} train={train} onTrainUpdate={this.onTrainUpdate} />
@@ -30,5 +31,9 @@ export class Home extends Component<object, HomeState>{
 
   onTrainUpdate = (train: rails.Train | null) => {
     this.setState<"train">({train});
-  }
+  };
+
+  onGridUpdate = (grid: rails.Grid) => {
+    this.setState<"grid">({grid});
+  };
 }
