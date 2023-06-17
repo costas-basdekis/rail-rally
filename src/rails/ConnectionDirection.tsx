@@ -12,6 +12,7 @@ const items = [
 export const connectionDirections: {
   items: ConnectionDirection[],
   offsetMap: {[key: ConnectionDirection]: Position},
+  arcMap: {[key: ConnectionDirection]: {[key: ConnectionDirection]: {angle: number, sweep: boolean, offsetX: number, offsetY: number}}},
   positionByDirectionMap: Map<ConnectionDirection, Position>,
   oppositeMap: { [key: ConnectionDirection]: ConnectionDirection },
   connectableDirections: {[key: ConnectionDirection]: ConnectionDirection[]},
@@ -30,6 +31,64 @@ export const connectionDirections: {
     "bottom-left": {x: -1, y: 1},
     left: {x: -1, y: 0},
     "top-left": {x: -1, y: -1},
+  },
+  arcMap: {
+    top: {
+      "bottom-right": {
+        offsetX: 1.5,
+        offsetY: 0,
+        angle: Math.PI / 4 * 3,
+        sweep: false,
+      },
+      "bottom-left": {
+        offsetX: -1.5,
+        offsetY: 0,
+        angle: Math.PI / 4,
+        sweep: true,
+      },
+    },
+    bottom: {
+      "top-right": {
+        offsetX: 1.5,
+        offsetY: 0,
+        angle: Math.PI / 4 * 5,
+        sweep: true,
+      },
+      "top-left": {
+        offsetX: -1.5,
+        offsetY: 0,
+        angle: Math.PI / 4 * 7,
+        sweep: false,
+      },
+    },
+    left: {
+      "top-right": {
+        offsetX: 0,
+        offsetY: -1.5,
+        angle: Math.PI / 4,
+        sweep: false,
+      },
+      "bottom-right": {
+        offsetX: 0,
+        offsetY: 1.5,
+        angle: Math.PI / 4 * 7,
+        sweep: true,
+      },
+    },
+    right: {
+      "top-left": {
+        offsetX: 0,
+        offsetY: -1.5,
+        angle: Math.PI / 4 * 3,
+        sweep: true,
+      },
+      "bottom-left": {
+        offsetX: 0,
+        offsetY: 1.5,
+        angle: Math.PI / 4 * 5,
+        sweep: false,
+      },
+    },
   },
   positionByDirectionMap: new Map([
     ["top", {x: 0.5, y: 0}],

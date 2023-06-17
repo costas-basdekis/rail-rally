@@ -30,12 +30,31 @@ export class RTile extends Component<RTileProps, {}> {
       {tile.internalConnections.map(([first, second]) => {
         const firstPosition = rails.connectionDirections.positionByDirectionMap.get(first)!;
         const secondPosition = rails.connectionDirections.positionByDirectionMap.get(second)!;
+        if (rails.connectionDirections.oppositeMap[first] === second) {
+          return (
+            <line
+              key={`${first}:${second}`}
+              x1={firstPosition.x * 20} y1={firstPosition.y * 20}
+              x2={secondPosition.x * 20} y2={secondPosition.y * 20}
+              stroke={"black"}
+            />
+          );
+        }
+        const [edge, corner, edgePosition] = first.includes("-")
+          ? [second, first, secondPosition] as const
+          : [first, second, firstPosition] as const;
+        const {angle, sweep, offsetX, offsetY} = rails.connectionDirections.arcMap[edge][corner];
+        const endX = (edgePosition.x + offsetX) * 20 + 20 * 1.5 * Math.cos(angle);
+        const endY = (edgePosition.y + offsetY) * 20 + 20 * 1.5 * Math.sin(angle);
         return (
-          <line
+          <path
             key={`${first}:${second}`}
-            x1={firstPosition.x * 20} y1={firstPosition.y * 20}
-            x2={secondPosition.x * 20} y2={secondPosition.y * 20}
+            d={[
+              `M ${edgePosition.x * 20} ${edgePosition.y * 20}`,
+              `A ${20 * 1.5} ${20 * 1.5} 0 0 ${sweep ? 1 : 0} ${endX} ${endY}`,
+            ].join(" ")}
             stroke={"black"}
+            fill={"none"}
           />
         );
       })}
