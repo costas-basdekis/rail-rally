@@ -30,9 +30,12 @@ export class RTrain extends Component<RTrainProps, {}> {
       return null;
     }
 
-    return (
+    return <>
       <circle cx={train.pointPosition.x * 20} cy={train.pointPosition.y * 20} r={3} className={"train"} />
-    );
+      {train.tail.map((position, index) => (
+        <circle key={index} cx={position.x * 20} cy={position.y * 20} r={2} className={"train"} />
+      ))}
+    </>;
   }
 
   recheckTrain = () => {

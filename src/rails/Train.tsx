@@ -12,6 +12,7 @@ export class Train {
   tile: Tile;
   direction: ConnectionDirection;
   nextTile: Tile | null;
+  tail: Position[];
 
   static startNew(grid: Grid): Train | null {
     return this.startNewFromDeadEnd(grid) ?? this.startNewFromConnection(grid);
@@ -40,7 +41,7 @@ export class Train {
     return this.startFromTileAndDeadEndDirection(tile, direction, grid);
   }
 
-  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid): Train {
+  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, tail: Position[] = []): Train {
     const direction = outgoingDirection;
     const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
     const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
@@ -54,10 +55,11 @@ export class Train {
       tile,
       direction,
       nextTile: grid.getTileInDirection(tile, direction),
+      tail: tail,
     });
   }
 
-  static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid): Train {
+  static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[] = []): Train {
     const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
     const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
     const targetDirections = tile.getConnectionsFrom(incomingDirection);
@@ -81,6 +83,7 @@ export class Train {
       tile,
       direction,
       nextTile,
+      tail: tail,
     });
   }
 
@@ -105,6 +108,7 @@ export class Train {
     tile: Tile;
     direction: ConnectionDirection;
     nextTile: Tile | null;
+    tail: Position[];
   }) {
     this.startPosition = init.startPosition;
     this.targetPosition = init.targetPosition;
@@ -114,6 +118,7 @@ export class Train {
     this.tile = init.tile;
     this.direction = init.direction;
     this.nextTile = init.nextTile;
+    this.tail = init.tail;
   }
 
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
@@ -131,6 +136,7 @@ export class Train {
       tile: this.tile,
       direction: this.direction,
       nextTile: this.nextTile,
+      tail: [this.pointPosition, ...this.tail].slice(0, 5),
     });
     if (newProgress === 1) {
       train = train.getNext(grid);
@@ -144,8 +150,8 @@ export class Train {
 
   getNext(grid: Grid): Train {
     if (!this.nextTile) {
-      return Train.startFromTileAndDeadEndDirection(this.tile, connectionDirections.oppositeMap[this.direction], grid);
+      return Train.startFromTileAndDeadEndDirection(this.tile, connectionDirections.oppositeMap[this.direction], grid, this.tail);
     }
-    return Train.startFromTileDirection(this.nextTile, connectionDirections.oppositeMap[this.direction], grid);
+    return Train.startFromTileDirection(this.nextTile, connectionDirections.oppositeMap[this.direction], grid, this.tail);
   }
 }
