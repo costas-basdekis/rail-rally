@@ -21,16 +21,24 @@ export class RGrid extends Component<RGridProps, RGridState> {
   render() {
     const {grid, editable} = this.props;
     const {selectedTile, connectableTiles} = this.state;
-    return Array.from(grid.tiles()).map(tile => (
-      <RTile
-        key={tile.positionStr}
-        editable={editable}
-        tile={tile}
-        selected={selectedTile === tile}
-        connectable={connectableTiles.includes(tile)}
-        onTileClick={this.onTileClick}
-      />
-    ));
+    return [
+      ...Array.from(grid.tiles()).map(tile => (
+        <RTile.Background
+          key={`${tile.positionStr}-background`}
+          editable={editable}
+          tile={tile}
+          selected={selectedTile === tile}
+          connectable={connectableTiles.includes(tile)}
+          onTileClick={this.onTileClick}
+        />
+      )),
+      ...Array.from(grid.tiles()).map(tile => (
+        <RTile.Connections
+          key={`${tile.positionStr}-connections`}
+          tile={tile}
+        />
+      )),
+    ];
   }
 
   onTileClick = (tile: rails.Tile) => {
