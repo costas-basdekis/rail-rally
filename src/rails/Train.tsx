@@ -3,6 +3,14 @@ import {ConnectionDirection, connectionDirections, Position} from "./ConnectionD
 import {Tile} from "./Tile";
 import {Grid} from "./Grid";
 
+interface HistoryNode {
+  distanceCovered: number;
+  tile: Tile;
+  connection: {from: ConnectionDirection, to: ConnectionDirection} | {from: ConnectionDirection, to: null} | {from: null, to: ConnectionDirection};
+}
+
+type History = HistoryNode[];
+
 export class Train {
   startPosition: Position;
   targetPosition: Position;
@@ -13,6 +21,8 @@ export class Train {
   direction: ConnectionDirection;
   nextTile: Tile | null;
   tail: Position[];
+  distanceCovered: number;
+  history: History;
 
   static startNew(grid: Grid): Train | null {
     return this.startNewFromDeadEnd(grid) ?? this.startNewFromConnection(grid);
@@ -24,7 +34,7 @@ export class Train {
       return null;
     }
     const tile = tilesWithDeadEndConnections[_.random(0, tilesWithDeadEndConnections.length - 1)];
-    return this.startFromTile(tile, grid);
+    return this.startFromTile(tile, grid, [], 0, []);
   }
 
   static startNewFromConnection(grid: Grid): Train | null {
@@ -33,19 +43,27 @@ export class Train {
       return null;
     }
     const tile = tilesWithConnections[_.random(0, tilesWithConnections.length - 1)];
-    return this.startFromTile(tile, grid);
+    return this.startFromTile(tile, grid, [], 0, []);
   }
 
-  static startFromTile(tile: Tile, grid: Grid): Train {
+  static startFromTile(tile: Tile, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
     const direction = tile.externalConnections[_.random(0, tile.externalConnections.length - 1)];
-    return this.startFromTileAndDeadEndDirection(tile, direction, grid);
+    return this.startFromTileAndDeadEndDirection(tile, direction, grid, tail, distanceCovered, history);
   }
 
-  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, tail: Position[] = []): Train {
+  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
     const direction = outgoingDirection;
     const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
     const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
     const targetPosition = {x: tile.x + directionOffset.x, y: tile.y + directionOffset.y};
+    const newHistory = [
+      {
+        distanceCovered,
+        tile,
+        connection: {from: null, to: direction},
+      },
+      ...history,
+    ].slice(0, 5);
     return new Train({
       startPosition,
       targetPosition,
@@ -56,23 +74,41 @@ export class Train {
       direction,
       nextTile: grid.getTileInDirection(tile, direction),
       tail: tail,
+      distanceCovered,
+      history: newHistory,
     });
   }
 
-  static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[] = []): Train {
+  static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
     const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
     const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
     const targetDirections = tile.getConnectionsFrom(incomingDirection);
-    let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null;
+    let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null, newHistory: History;
     if (targetDirections.length) {
       direction = targetDirections[_.random(0, targetDirections.length - 1)];
       const targetDirectionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
       targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
       nextTile = grid.getTileInDirection(tile, direction);
+      newHistory = [
+        {
+          distanceCovered,
+          tile,
+          connection: {from: incomingDirection, to: direction},
+        },
+        ...history,
+      ].slice(0, 5);
     } else {
       targetPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
       direction = connectionDirections.oppositeMap[incomingDirection];
       nextTile = null;
+      newHistory = [
+        {
+          distanceCovered,
+          tile,
+          connection: {from: incomingDirection, to: null},
+        },
+        ...history,
+      ].slice(0, 5);
     }
     return new Train({
       startPosition,
@@ -84,6 +120,8 @@ export class Train {
       direction,
       nextTile,
       tail: tail,
+      distanceCovered,
+      history: newHistory,
     });
   }
 
@@ -109,6 +147,8 @@ export class Train {
     direction: ConnectionDirection;
     nextTile: Tile | null;
     tail: Position[];
+    distanceCovered: number;
+    history: History;
   }) {
     this.startPosition = init.startPosition;
     this.targetPosition = init.targetPosition;
@@ -119,6 +159,8 @@ export class Train {
     this.direction = init.direction;
     this.nextTile = init.nextTile;
     this.tail = init.tail;
+    this.distanceCovered = init.distanceCovered;
+    this.history = init.history;
   }
 
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
@@ -137,6 +179,8 @@ export class Train {
       direction: this.direction,
       nextTile: this.nextTile,
       tail: [this.pointPosition, ...this.tail].slice(0, 5),
+      distanceCovered: this.distanceCovered + connectionProgress,
+      history: this.history,
     });
     if (newProgress === 1) {
       train = train.getNext(grid);
@@ -149,9 +193,10 @@ export class Train {
   }
 
   getNext(grid: Grid): Train {
+    const nextDirection = connectionDirections.oppositeMap[this.direction];
     if (!this.nextTile) {
-      return Train.startFromTileAndDeadEndDirection(this.tile, connectionDirections.oppositeMap[this.direction], grid, this.tail);
+      return Train.startFromTileAndDeadEndDirection(this.tile, nextDirection, grid, this.tail, this.distanceCovered, this.history);
     }
-    return Train.startFromTileDirection(this.nextTile, connectionDirections.oppositeMap[this.direction], grid, this.tail);
+    return Train.startFromTileDirection(this.nextTile, nextDirection, grid, this.tail, this.distanceCovered, this.history);
   }
 }
