@@ -31,7 +31,7 @@ export const Empty: Story = {
 export const Arcs: Story = {
   render,
   args: {
-    grid: Grid.fromSize(9,5)
+    grid: Grid.fromSize(16,7)
       .connectMany([
         {x: 0, y: 2}, {x: 0, y: 1},
         {x: 1, y: 0}, {x: 2, y: 0},
@@ -44,7 +44,17 @@ export const Arcs: Story = {
       .connect([{x: 4, y: 2}, {x: 5, y: 2}])
       .connect([{x: 6, y: 0}, {x: 6, y: 1}])
       .connect([{x: 8, y: 2}, {x: 7, y: 2}])
-      .connect([{x: 6, y: 4}, {x: 6, y: 3}]),
+      .connect([{x: 6, y: 4}, {x: 6, y: 3}])
+      .connectMany([
+        {x: 10, y: 3}, {x: 11, y: 2}, {x: 12, y: 1},
+        {x: 13, y: 2}, {x: 14, y: 3},
+        {x: 13, y: 4}, {x: 12, y: 5},
+        {x: 11, y: 4}, {x: 10, y: 3},
+      ])
+      .connect([{x: 9, y: 3}, {x: 10, y: 3}])
+      .connect([{x: 12, y: 0}, {x: 12, y: 1}])
+      .connect([{x: 15, y: 3}, {x: 14, y: 3}])
+      .connect([{x: 12, y: 6}, {x: 12, y: 5}]),
   },
 };
 

@@ -24,6 +24,7 @@ class RTileBackground extends Component<RTileProps, {}> {
 
 class RTileConnections extends Component<{tile: rails.Tile}, {}> {
   centerPosition: rails.Position = {x: 0.5, y: 0.5};
+  arcRadius = Math.sqrt(2);
 
   render() {
     const {tile} = this.props;
@@ -48,14 +49,14 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
           }
           const {angle, sweep, offsetX, offsetY} = arcConfiguration;
           const edgePosition = rails.connectionDirections.positionByDirectionMap.get(edge)!
-          const endX = (edgePosition.x + offsetX) * 20 + 20 * 1.5 * Math.cos(angle);
-          const endY = (edgePosition.y + offsetY) * 20 + 20 * 1.5 * Math.sin(angle);
+          const endX = (edgePosition.x + offsetX) * 20 + 20 * this.arcRadius * Math.cos(angle);
+          const endY = (edgePosition.y + offsetY) * 20 + 20 * this.arcRadius * Math.sin(angle);
           return (
             <path
               key={`${first}:${second}`}
               d={[
                 `M ${edgePosition.x * 20} ${edgePosition.y * 20}`,
-                `A ${20 * 1.5} ${20 * 1.5} 0 0 ${sweep ? 1 : 0} ${endX} ${endY}`,
+                `A ${20 * this.arcRadius} ${20 * this.arcRadius} 0 0 ${sweep ? 1 : 0} ${endX} ${endY}`,
               ].join(" ")}
               stroke={"black"}
               fill={"none"}
