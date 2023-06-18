@@ -11,7 +11,7 @@ interface HistoryNode {
 
 type History = HistoryNode[];
 
-interface TrainInit {
+interface TrainCar {
   startPosition: Position;
   targetPosition: Position;
   pointPosition: Position;
@@ -21,20 +21,16 @@ interface TrainInit {
   direction: ConnectionDirection;
   nextTile: Tile | null;
   tail: Position[];
+}
+
+interface TrainInit {
+  cars: TrainCar[],
   distanceCovered: number;
   history: History;
 }
 
 export class Train implements TrainInit {
-  startPosition: Position;
-  targetPosition: Position;
-  pointPosition: Position;
-  connectionLength: number;
-  connectionProgress: number;
-  tile: Tile;
-  direction: ConnectionDirection;
-  nextTile: Tile | null;
-  tail: Position[];
+  cars: TrainCar[];
   distanceCovered: number;
   history: History;
 
@@ -79,15 +75,19 @@ export class Train implements TrainInit {
       ...history,
     ].slice(0, 5);
     return new Train({
-      startPosition,
-      targetPosition,
-      pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
-      connectionLength: this.getPointDistance(startPosition, targetPosition),
-      connectionProgress: 0,
-      tile,
-      direction,
-      nextTile: grid.getTileInDirection(tile, direction),
-      tail: tail,
+      cars: [
+        {
+          startPosition,
+          targetPosition,
+          pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
+          connectionLength: this.getPointDistance(startPosition, targetPosition),
+          connectionProgress: 0,
+          tile,
+          direction,
+          nextTile: grid.getTileInDirection(tile, direction),
+          tail: tail,
+        },
+      ],
       distanceCovered,
       history: newHistory,
     });
@@ -125,15 +125,19 @@ export class Train implements TrainInit {
       ].slice(0, 5);
     }
     return new Train({
-      startPosition,
-      targetPosition,
-      pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
-      connectionLength: this.getPointDistance(startPosition, targetPosition),
-      connectionProgress: 0,
-      tile,
-      direction,
-      nextTile,
-      tail: tail,
+      cars: [
+        {
+          startPosition,
+          targetPosition,
+          pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
+          connectionLength: this.getPointDistance(startPosition, targetPosition),
+          connectionProgress: 0,
+          tile,
+          direction,
+          nextTile,
+          tail: tail,
+        },
+      ],
       distanceCovered,
       history: newHistory,
     });
@@ -152,29 +156,30 @@ export class Train implements TrainInit {
   }
 
   constructor(init : TrainInit) {
-    this.startPosition = init.startPosition;
-    this.targetPosition = init.targetPosition;
-    this.pointPosition = init.pointPosition;
-    this.connectionLength = init.connectionLength;
-    this.connectionProgress = init.connectionProgress;
-    this.tile = init.tile;
-    this.direction = init.direction;
-    this.nextTile = init.nextTile;
-    this.tail = init.tail;
+    this.cars = init.cars;
     this.distanceCovered = init.distanceCovered;
     this.history = init.history;
   }
 
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
-    const connectionProgressTarget = this.connectionProgress + connectionProgressIncrement;
-    const connectionProgress = Math.min(this.connectionLength, connectionProgressTarget);
+    return this.animateCar(this.cars[0], grid, connectionProgressIncrement);
+  }
+
+  animateCar(car: TrainCar, grid: Grid, connectionProgressIncrement: number = 0.2): Train {
+    const connectionProgressTarget = car.connectionProgress + connectionProgressIncrement;
+    const connectionProgress = Math.min(car.connectionLength, connectionProgressTarget);
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
-    const newProgress = connectionProgress / this.connectionLength;
-    const pointPosition = Train.interpolatePoint(this.startPosition, this.targetPosition, newProgress);
+    const newProgress = connectionProgress / car.connectionLength;
+    const pointPosition = Train.interpolatePoint(car.startPosition, car.targetPosition, newProgress);
     let train = this.copy({
-      pointPosition,
-      connectionProgress,
-      tail: [this.pointPosition, ...this.tail].slice(0, 5),
+      cars: [
+        {
+          ...car,
+          pointPosition,
+          connectionProgress,
+          tail: [car.pointPosition, ...car.tail].slice(0, 5),
+        },
+      ],
       distanceCovered: this.distanceCovered + connectionProgress,
     });
     if (newProgress === 1) {
@@ -189,15 +194,7 @@ export class Train implements TrainInit {
 
   copy(updates: Partial<TrainInit> = {}): Train {
     return new Train({
-      startPosition: this.startPosition,
-      targetPosition: this.targetPosition,
-      pointPosition: this.pointPosition,
-      connectionLength: this.connectionLength,
-      connectionProgress: this.connectionProgress,
-      tile: this.tile,
-      direction: this.direction,
-      nextTile: this.nextTile,
-      tail: this.tail,
+      cars: this.cars,
       distanceCovered: this.distanceCovered,
       history: this.history,
       ...updates,
@@ -205,10 +202,14 @@ export class Train implements TrainInit {
   }
 
   getNext(grid: Grid): Train {
-    const nextDirection = connectionDirections.oppositeMap[this.direction];
-    if (!this.nextTile) {
-      return Train.startFromTileAndDeadEndDirection(this.tile, nextDirection, grid, this.tail, this.distanceCovered, this.history);
+    return this.getNextCar(this.cars[0], grid);
+  }
+
+  getNextCar(car: TrainCar, grid: Grid): Train {
+    const nextDirection = connectionDirections.oppositeMap[car.direction];
+    if (!car.nextTile) {
+      return Train.startFromTileAndDeadEndDirection(car.tile, nextDirection, grid, car.tail, this.distanceCovered, this.history);
     }
-    return Train.startFromTileDirection(this.nextTile, nextDirection, grid, this.tail, this.distanceCovered, this.history);
+    return Train.startFromTileDirection(car.nextTile, nextDirection, grid, car.tail, this.distanceCovered, this.history);
   }
 }
