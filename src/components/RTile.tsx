@@ -28,8 +28,8 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
     return (
       <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
         {tile.internalConnections.map(([first, second]) => {
-          const arcConfiguration = rails.connectionDirections.arcConfigurationMap[first]?.[second];
-          if (!arcConfiguration) {
+          const connection = rails.connections.map[first][second];
+          if (!connection.arcConfiguration) {
             const firstPosition = rails.connectionDirections.positionByDirectionMap[first];
             const secondPosition = rails.connectionDirections.positionByDirectionMap[second];
             return (
@@ -41,7 +41,7 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
               />
             );
           }
-          const {edge, corner, sweep, arcRadius} = arcConfiguration;
+          const {edge, corner, sweep, arcRadius} = connection.arcConfiguration;
           const edgePosition = rails.connectionDirections.positionByDirectionMap[edge]
           const cornerPosition = rails.connectionDirections.positionByDirectionMap[corner]
           return (

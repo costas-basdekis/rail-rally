@@ -56,27 +56,6 @@ class ConnectionDirections {
   };
   centerOffset: Position = {x: 0.5, y: 0.5};
 
-  getArcConfiguration(first: ConnectionDirection, second: ConnectionDirection): (ArcConfiguration | null) {
-    if (!this.otherConnectionsByOffset[first][3].includes(second)) {
-      return null;
-    }
-    const [edge, corner] =
-      first.includes("-")
-        ? [second, first]
-        : [first, second];
-    return {
-      edge,
-      corner,
-      sweep: (
-        this.items.indexOf(edge)
-        - this.items.indexOf(corner) + 8
-      ) % 8 < 4,
-      arcRadius: this.arcRadius,
-    };
-  }
-
-  arcRadius: number = 1.5;
-
   positionByDirectionMap: {[key: ConnectionDirection]: Position} = {
     top: {x: 0.5, y: 0},
     bottom: {x: 0.5, y: 1},
@@ -105,17 +84,6 @@ class ConnectionDirections {
         Array.from(new Set([(this.items)[(8 + index + offset) % 8], (this.items)[(8 + index - offset) % 8]])).sort(),
       ] as const)),
     ] as const));
-
-  arcConfigurationMap: {[key: ConnectionDirection]: {[key: ConnectionDirection]: ArcConfiguration}} =
-    Object.fromEntries(
-      this.items
-        .map(first => [first, Object.fromEntries(
-          this.items
-            .map(second => [second, this.getArcConfiguration(first, second)])
-            .filter(([, configuration]) => configuration) as [ConnectionDirection, ArcConfiguration][]
-        )] as const)
-        .filter(([, configurations]) => Object.entries(configurations).length)
-    );
 
   areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
     return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
@@ -152,7 +120,8 @@ export class Connection {
   constructor(start: ConnectionDirection | null, end: ConnectionDirection | null) {
     this.start = start;
     this.end = end;
-    this.arcConfiguration = connectionDirections.arcConfigurationMap[this.start]?.[this.end] ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    this.arcConfiguration = connections.arcConfigurationMap[this.start]?.[this.end] ?? null;
     this.path = this.makeConnectionPath();
     this.length = this.path.getTotalLength();
     this.reverseInterpolation = this.end === this.arcConfiguration?.edge;
@@ -203,10 +172,47 @@ export class Connection {
 }
 
 class Connections {
-  map: {[key: ConnectionDirection | "null"]: {[key: ConnectionDirection | "null"]: Connection}} = Object.fromEntries(
-    [null, ...connectionDirections.items].map(
-      first => [first, Object.fromEntries([null, ...connectionDirections.items].filter(second => first !== second).map(
-        second => [second, new Connection(first, second)] as const))] as const));
+  getArcConfiguration(first: ConnectionDirection, second: ConnectionDirection): (ArcConfiguration | null) {
+    if (!connectionDirections.otherConnectionsByOffset[first][3].includes(second)) {
+      return null;
+    }
+    const [edge, corner] =
+      first.includes("-")
+        ? [second, first]
+        : [first, second];
+    return {
+      edge,
+      corner,
+      sweep: (
+        connectionDirections.items.indexOf(edge)
+        - connectionDirections.items.indexOf(corner) + 8
+      ) % 8 < 4,
+      arcRadius: this.arcRadius,
+    };
+  }
+
+  arcRadius: number = 1.5;
+
+  arcConfigurationMap: {[key: ConnectionDirection]: {[key: ConnectionDirection]: ArcConfiguration}} =
+    Object.fromEntries(
+      connectionDirections.items
+        .map(first => [first, Object.fromEntries(
+          connectionDirections.items
+            .map(second => [second, this.getArcConfiguration(first, second)])
+            .filter(([, configuration]) => configuration) as [ConnectionDirection, ArcConfiguration][]
+        )] as const)
+        .filter(([, configurations]) => Object.entries(configurations).length)
+    );
+
+  map: {[key: ConnectionDirection | "null"]: {[key: ConnectionDirection | "null"]: Connection}} = {};
+
+  fillMap() {
+    Object.assign(this.map, Object.fromEntries(
+      [null, ...connectionDirections.items].map(
+        first => [first, Object.fromEntries([null, ...connectionDirections.items].filter(second => first !== second).map(
+          second => [second, new Connection(first, second)] as const))] as const)));
+  }
 }
 
 export const connections = new Connections();
+connections.fillMap();
