@@ -11,7 +11,7 @@ interface HistoryNode {
 
 type History = HistoryNode[];
 
-interface TrainCar {
+interface TrainCarInit {
   startPosition: Position;
   targetPosition: Position;
   pointPosition: Position;
@@ -21,6 +21,45 @@ interface TrainCar {
   direction: ConnectionDirection;
   nextTile: Tile | null;
   tail: Position[];
+}
+
+class TrainCar implements TrainCarInit {
+  startPosition: Position;
+  targetPosition: Position;
+  pointPosition: Position;
+  connectionLength: number;
+  connectionProgress: number;
+  tile: Tile;
+  direction: ConnectionDirection;
+  nextTile: Tile | null;
+  tail: Position[];
+
+  constructor(init: TrainCarInit) {
+    this.startPosition = init.startPosition;
+    this.targetPosition = init.targetPosition;
+    this.pointPosition = init.pointPosition;
+    this.connectionLength = init.connectionLength;
+    this.connectionProgress = init.connectionProgress;
+    this.tile = init.tile;
+    this.direction = init.direction;
+    this.nextTile = init.nextTile;
+    this.tail = init.tail;
+  }
+
+  copy(updates: Partial<TrainCarInit> = {}): TrainCar {
+    return new TrainCar({
+      startPosition: this.startPosition,
+      targetPosition: this.targetPosition,
+      pointPosition: this.pointPosition,
+      connectionLength: this.connectionLength,
+      connectionProgress: this.connectionProgress,
+      tile: this.tile,
+      direction: this.direction,
+      nextTile: this.nextTile,
+      tail: this.tail,
+      ...updates,
+    });
+  }
 }
 
 interface TrainInit {
@@ -76,7 +115,7 @@ export class Train implements TrainInit {
     ].slice(0, 5);
     return new Train({
       cars: [
-        {
+        new TrainCar({
           startPosition,
           targetPosition,
           pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
@@ -86,7 +125,7 @@ export class Train implements TrainInit {
           direction,
           nextTile: grid.getTileInDirection(tile, direction),
           tail: tail,
-        },
+        }),
       ],
       distanceCovered,
       history: newHistory,
@@ -126,7 +165,7 @@ export class Train implements TrainInit {
     }
     return new Train({
       cars: [
-        {
+        new TrainCar({
           startPosition,
           targetPosition,
           pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
@@ -136,7 +175,7 @@ export class Train implements TrainInit {
           direction,
           nextTile,
           tail: tail,
-        },
+        }),
       ],
       distanceCovered,
       history: newHistory,
@@ -173,12 +212,11 @@ export class Train implements TrainInit {
     const pointPosition = Train.interpolatePoint(car.startPosition, car.targetPosition, newProgress);
     let train = this.copy({
       cars: [
-        {
-          ...car,
+        car.copy({
           pointPosition,
           connectionProgress,
           tail: [car.pointPosition, ...car.tail].slice(0, 5),
-        },
+        }),
       ],
       distanceCovered: this.distanceCovered + connectionProgress,
     });
