@@ -7,6 +7,7 @@ import Iterator from "core-js-pure/actual/iterator";
 
 interface HistoryNode {
   distanceCovered: number;
+  connectionLength: number;
   tile: Tile;
   connection: {from: ConnectionDirection | null, to: ConnectionDirection | null};
 }
@@ -118,6 +119,7 @@ class TrainCar implements TrainCarInit {
   makeHistoryNode(): HistoryNode {
     return {
       distanceCovered: this.distanceCovered,
+      connectionLength: this.connectionLength,
       tile: this.tile,
       connection: {from: this.incomingDirection, to: this.outgoingDirection},
     };
@@ -141,17 +143,17 @@ class TrainCar implements TrainCarInit {
     let car = this.copy({
       pointPosition,
       connectionProgress,
-      distanceCovered: this.distanceCovered + connectionProgress,
+      distanceCovered: this.distanceCovered + connectionProgressIncrement - connectionProgressLeftover,
       tail: [this.pointPosition, ...this.tail].slice(0, 5),
     });
     const newHistoryNodes = [];
     if (newProgress === 1) {
       if (history) {
-        car = car.getNext(grid,history);
+        car = car.getNext(grid, history);
       } else {
         car = car.createNext(grid);
+        newHistoryNodes.unshift(car.makeHistoryNode());
       }
-      newHistoryNodes.unshift(car.makeHistoryNode());
       // TODO: if we didn't manage to make any progress, we should worry
       if (connectionProgressLeftover && connectionProgressLeftover < connectionProgressTarget) {
         let nextHistoryNodes;
@@ -222,15 +224,11 @@ export class Train implements TrainInit {
   }
 
   static startWithCar(car: TrainCar, history: History): Train {
-    const newHistory = [
-      car.makeHistoryNode(),
-      ...history,
-    ].slice(0, 5);
     return new Train({
       cars: [
         car,
       ],
-      history: newHistory,
+      history,
     });
   }
 
