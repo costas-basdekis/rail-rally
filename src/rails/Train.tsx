@@ -2,6 +2,8 @@ import _ from "underscore";
 import {ConnectionDirection, connectionDirections, Position, positions} from "./ConnectionDirection";
 import {Tile} from "./Tile";
 import {Grid} from "./Grid";
+// noinspection TypeScriptCheckImport
+import Iterator from "core-js-pure/actual/iterator";
 
 interface HistoryNode {
   distanceCovered: number;
@@ -184,7 +186,9 @@ export class Train implements TrainInit {
   }
 
   static startNewFromDeadEnd(grid: Grid): Train | null {
-    const tilesWithDeadEndConnections = Array.from(grid.tiles()).filter(tile => tile.deadEndInternalConnections.length);
+    const tilesWithDeadEndConnections = Iterator.from(grid.tiles())
+      .filter(tile => tile.deadEndInternalConnections.length)
+      .toArray();
     if (!tilesWithDeadEndConnections.length) {
       return null;
     }
@@ -193,7 +197,9 @@ export class Train implements TrainInit {
   }
 
   static startNewFromConnection(grid: Grid): Train | null {
-    const tilesWithConnections = Array.from(grid.tiles()).filter(tile => tile.externalConnections.length);
+    const tilesWithConnections = Iterator.from(grid.tiles())
+      .filter(tile => tile.externalConnections.length)
+      .toArray();
     if (!tilesWithConnections.length) {
       return null;
     }

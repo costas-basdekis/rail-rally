@@ -1,6 +1,8 @@
 import {Component} from "react";
 import {RTile} from "@/components/RTile";
 import * as rails from "@/rails";
+// noinspection TypeScriptCheckImport
+import Iterator from "core-js-pure/actual/iterator";
 
 interface RGridProps {
   grid: rails.Grid,
@@ -22,7 +24,7 @@ export class RGrid extends Component<RGridProps, RGridState> {
     const {grid, editable} = this.props;
     const {selectedTile, connectableTiles} = this.state;
     return [
-      ...Array.from(grid.tiles()).map(tile => (
+      ...Iterator.from(grid.tiles()).map(tile => (
         <RTile.Background
           key={`${tile.positionStr}-background`}
           editable={editable}
@@ -32,7 +34,7 @@ export class RGrid extends Component<RGridProps, RGridState> {
           onTileClick={this.onTileClick}
         />
       )),
-      ...Array.from(grid.tiles()).map(tile => (
+      ...Iterator.from(grid.tiles()).map(tile => (
         <RTile.Connections
           key={`${tile.positionStr}-connections`}
           tile={tile}
