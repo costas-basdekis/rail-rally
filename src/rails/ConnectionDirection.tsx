@@ -45,6 +45,7 @@ class ConnectionDirections {
     left: {x: -1, y: 0},
     "top-left": {x: -1, y: -1},
   };
+  centerOffset: Position = {x: 0.5, y: 0.5};
 
   getArcConfiguration(first: ConnectionDirection, second: ConnectionDirection): (ArcConfiguration | null) {
     if (!this.otherConnectionsByOffset[first][3].includes(second)) {

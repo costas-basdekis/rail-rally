@@ -23,8 +23,6 @@ class RTileBackground extends Component<RTileProps, {}> {
 }
 
 class RTileConnections extends Component<{tile: rails.Tile}, {}> {
-  centerPosition: rails.Position = {x: 0.5, y: 0.5};
-
   render() {
     const {tile} = this.props;
     return (
@@ -63,7 +61,7 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
           return (
             <line
               key={direction}
-              x1={(this.centerPosition.x * 0.8 + position.x * 0.2) * 20} y1={(this.centerPosition.y * 0.8 + position.y * 0.2) * 20}
+              x1={(rails.connectionDirections.centerOffset.x * 0.8 + position.x * 0.2) * 20} y1={(rails.connectionDirections.centerOffset.y * 0.8 + position.y * 0.2) * 20}
               x2={position.x * 20} y2={position.y * 20}
               stroke={"black"}
             />
