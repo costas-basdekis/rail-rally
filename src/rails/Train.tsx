@@ -1,16 +1,11 @@
 import _ from "underscore";
-import {
-  Connection,
-  ConnectionDirection,
-  connectionDirections,
-  connections,
-  Position,
-  positions
-} from "@/rails/ConnectionDirection";
+import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
 import {Tile} from "@/rails/Tile";
 import {Grid} from "@/rails/Grid";
 // noinspection TypeScriptCheckImport
 import Iterator from "core-js-pure/actual/iterator";
+import {Position, positions} from "@/rails/Position";
+import {Connection, connections} from "@/rails/Connection";
 
 interface HistoryNode {
   tile: Tile;
