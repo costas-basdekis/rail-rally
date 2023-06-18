@@ -6,9 +6,9 @@ import {
   connections,
   Position,
   positions
-} from "./ConnectionDirection";
-import {Tile} from "./Tile";
-import {Grid} from "./Grid";
+} from "@/rails/ConnectionDirection";
+import {Tile} from "@/rails/Tile";
+import {Grid} from "@/rails/Grid";
 // noinspection TypeScriptCheckImport
 import Iterator from "core-js-pure/actual/iterator";
 

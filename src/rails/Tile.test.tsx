@@ -1,5 +1,4 @@
-import {Tile} from "./Tile";
-import {Grid} from "./Grid";
+import {Grid, Tile} from "@/rails";
 
 describe("Tile", () => {
   describe("addInternalConnection", () => {

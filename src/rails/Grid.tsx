@@ -1,6 +1,7 @@
 import _ from "underscore";
 import {Tile} from "@/rails/Tile";
-import {ConnectionDirection, connectionDirections, Position} from "@/rails/ConnectionDirection";
+import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
+import {Position} from "@/rails/Position";
 
 export interface SerialisedGrid {
   width: number;

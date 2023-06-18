@@ -1,5 +1,5 @@
-import {Grid} from "./Grid";
-import {ConnectionDirection, connectionDirections} from "./ConnectionDirection";
+import {Grid} from "@/rails/Grid";
+import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
 
 export class Tile {
   grid: Grid;

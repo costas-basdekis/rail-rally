@@ -1,5 +1,4 @@
-import {connectionDirections} from "./ConnectionDirection";
-import exp = require("constants");
+import {connectionDirections} from "@/rails";
 
 describe("ConnectionDirection", () => {
   describe("connectionDirections", () => {
