@@ -11,7 +11,21 @@ interface HistoryNode {
 
 type History = HistoryNode[];
 
-export class Train {
+interface TrainInit {
+  startPosition: Position;
+  targetPosition: Position;
+  pointPosition: Position;
+  connectionLength: number;
+  connectionProgress: number;
+  tile: Tile;
+  direction: ConnectionDirection;
+  nextTile: Tile | null;
+  tail: Position[];
+  distanceCovered: number;
+  history: History;
+}
+
+export class Train implements TrainInit {
   startPosition: Position;
   targetPosition: Position;
   pointPosition: Position;
@@ -137,19 +151,7 @@ export class Train {
     };
   }
 
-  constructor(init : {
-    startPosition: Position;
-    targetPosition: Position;
-    pointPosition: Position;
-    connectionLength: number;
-    connectionProgress: number;
-    tile: Tile;
-    direction: ConnectionDirection;
-    nextTile: Tile | null;
-    tail: Position[];
-    distanceCovered: number;
-    history: History;
-  }) {
+  constructor(init : TrainInit) {
     this.startPosition = init.startPosition;
     this.targetPosition = init.targetPosition;
     this.pointPosition = init.pointPosition;
