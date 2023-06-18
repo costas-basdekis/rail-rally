@@ -82,6 +82,17 @@ class ConnectionDirections {
       ] as const)),
     ] as const));
 
+  arcConfigurationMap: {[key: ConnectionDirection]: {[key: ConnectionDirection]: ArcConfiguration}} =
+    Object.fromEntries(
+      this.items
+        .map(first => [first, Object.fromEntries(
+          this.items
+            .map(second => [second, this.getArcConfiguration(first, second)])
+            .filter(([, configuration]) => configuration) as [ConnectionDirection, ArcConfiguration][]
+        )] as const)
+        .filter(([, configurations]) => Object.entries(configurations).length)
+    );
+
   areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
     return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
   }
@@ -100,17 +111,6 @@ class ConnectionDirections {
       y: position.y + offset.y,
     };
   }
-
-  arcConfigurationMap: {[key: ConnectionDirection]: {[key: ConnectionDirection]: ArcConfiguration}} =
-    Object.fromEntries(
-      this.items
-        .map(first => [first, Object.fromEntries(
-          this.items
-            .map(second => [second, this.getArcConfiguration(first, second)])
-            .filter(([, configuration]) => configuration) as [ConnectionDirection, ArcConfiguration][]
-        )] as const)
-        .filter(([, configurations]) => Object.entries(configurations).length)
-    );
 }
 
 export const connectionDirections = new ConnectionDirections();
