@@ -171,18 +171,11 @@ export class Train implements TrainInit {
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
     const newProgress = connectionProgress / this.connectionLength;
     const pointPosition = Train.interpolatePoint(this.startPosition, this.targetPosition, newProgress);
-    let train = new Train({
-      startPosition: this.startPosition,
-      targetPosition: this.targetPosition,
+    let train = this.copy({
       pointPosition,
-      connectionLength: this.connectionLength,
       connectionProgress,
-      tile: this.tile,
-      direction: this.direction,
-      nextTile: this.nextTile,
       tail: [this.pointPosition, ...this.tail].slice(0, 5),
       distanceCovered: this.distanceCovered + connectionProgress,
-      history: this.history,
     });
     if (newProgress === 1) {
       train = train.getNext(grid);
@@ -192,6 +185,23 @@ export class Train implements TrainInit {
       }
     }
     return train;
+  }
+
+  copy(updates: Partial<TrainInit> = {}): Train {
+    return new Train({
+      startPosition: this.startPosition,
+      targetPosition: this.targetPosition,
+      pointPosition: this.pointPosition,
+      connectionLength: this.connectionLength,
+      connectionProgress: this.connectionProgress,
+      tile: this.tile,
+      direction: this.direction,
+      nextTile: this.nextTile,
+      tail: this.tail,
+      distanceCovered: this.distanceCovered,
+      history: this.history,
+      ...updates,
+    });
   }
 
   getNext(grid: Grid): Train {
