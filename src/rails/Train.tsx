@@ -6,9 +6,8 @@ import {Grid} from "./Grid";
 import Iterator from "core-js-pure/actual/iterator";
 
 interface HistoryNode {
-  distanceCovered: number;
-  connectionLength: number;
   tile: Tile;
+  tileIndex: number;
   connection: {from: ConnectionDirection | null, to: ConnectionDirection | null};
 }
 
@@ -22,6 +21,7 @@ interface TrainCarInit {
   connectionProgress: number;
   distanceCovered: number;
   tile: Tile;
+  tileIndex: number;
   direction: ConnectionDirection;
   incomingDirection: ConnectionDirection | null;
   outgoingDirection: ConnectionDirection | null;
@@ -37,22 +37,23 @@ class TrainCar implements TrainCarInit {
   connectionProgress: number;
   distanceCovered: number;
   tile: Tile;
+  tileIndex: number;
   direction: ConnectionDirection;
   incomingDirection: ConnectionDirection | null;
   outgoingDirection: ConnectionDirection | null;
   nextTile: Tile | null;
   tail: Position[];
 
-  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
+  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, distanceCovered: number, tileIndex: number, tail: Position[]): TrainCar {
     const targetDirections = tile.getConnectionsFrom(incomingDirection);
     const outgoingDirection =
       targetDirections.length
         ? targetDirections[_.random(0, targetDirections.length - 1)]
         : null;
-    return this.startFromTileAndConnection(tile, incomingDirection, outgoingDirection, grid, distanceCovered, tail);
+    return this.startFromTileAndConnection(tile, incomingDirection, outgoingDirection, grid, distanceCovered, tileIndex, tail);
   }
 
-  static startFromTileAndConnection(tile: Tile, incomingDirection: ConnectionDirection | null, outgoingDirection: ConnectionDirection | null, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
+  static startFromTileAndConnection(tile: Tile, incomingDirection: ConnectionDirection | null, outgoingDirection: ConnectionDirection | null, grid: Grid, distanceCovered: number, tileIndex: number, tail: Position[]): TrainCar {
     const startDirectionOffset =
       incomingDirection
         ? connectionDirections.positionByDirectionMap.get(incomingDirection)!
@@ -75,6 +76,7 @@ class TrainCar implements TrainCarInit {
       connectionProgress: 0,
       distanceCovered,
       tile,
+      tileIndex,
       direction: outgoingDirection ?? connectionDirections.oppositeMap[incomingDirection],
       incomingDirection,
       outgoingDirection,
@@ -91,6 +93,7 @@ class TrainCar implements TrainCarInit {
     this.connectionProgress = init.connectionProgress;
     this.distanceCovered = init.distanceCovered;
     this.tile = init.tile;
+    this.tileIndex = init.tileIndex;
     this.direction = init.direction;
     this.incomingDirection = init.incomingDirection;
     this.outgoingDirection = init.outgoingDirection;
@@ -107,6 +110,7 @@ class TrainCar implements TrainCarInit {
       connectionProgress: this.connectionProgress,
       distanceCovered: this.distanceCovered,
       tile: this.tile,
+      tileIndex: this.tileIndex,
       direction: this.direction,
       incomingDirection: this.incomingDirection,
       outgoingDirection: this.outgoingDirection,
@@ -118,9 +122,8 @@ class TrainCar implements TrainCarInit {
 
   makeHistoryNode(): HistoryNode {
     return {
-      distanceCovered: this.distanceCovered,
-      connectionLength: this.connectionLength,
       tile: this.tile,
+      tileIndex: this.tileIndex,
       connection: {from: this.incomingDirection, to: this.outgoingDirection},
     };
   }
@@ -167,15 +170,15 @@ class TrainCar implements TrainCarInit {
   createNext(grid: Grid): TrainCar {
     const nextDirection = connectionDirections.oppositeMap[this.direction];
     if (!this.nextTile) {
-      return TrainCar.startFromTileAndConnection(this.tile, null, nextDirection, grid, this.distanceCovered, this.tail);
+      return TrainCar.startFromTileAndConnection(this.tile, null, nextDirection, grid, this.distanceCovered, this.tileIndex + 1, this.tail);
     }
-    return TrainCar.startFromTileAndDirection(this.nextTile, nextDirection, grid, this.distanceCovered, this.tail);
+    return TrainCar.startFromTileAndDirection(this.nextTile, nextDirection, grid, this.distanceCovered, this.tileIndex + 1, this.tail);
   }
 
   getNext(grid: Grid, history: History): TrainCar {
-    const node = history.findLast(node => node.distanceCovered <= this.distanceCovered);
+    const node = history.findLast(node => node.tileIndex === this.tileIndex + 1);
     if (!node) {
-      throw new Error("Could not find next node");
+      throw new Error(`Could not find next node: ${this.tileIndex + 1} in ${history.map(node => node.tileIndex).join(",")}`);
     }
     return TrainCar.startFromTileAndConnection(node.tile, node.connection.from, node.connection.to, grid, this.distanceCovered, this.tileIndex + 1, this.tail);
   }
@@ -218,7 +221,7 @@ export class Train implements TrainInit {
 
   static startFromTile(tile: Tile, grid: Grid): Train {
     const direction = tile.externalConnections[_.random(0, tile.externalConnections.length - 1)];
-    const car = TrainCar.startFromTileAndConnection(tile, null, direction, grid, 0, []);
+    const car = TrainCar.startFromTileAndConnection(tile, null, direction, grid, 0, 0, []);
     return this.startWithCar(car, []);
   }
 
