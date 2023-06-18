@@ -20,14 +20,18 @@ export class RTrain extends Component<RTrainProps, {}> {
     if (!train) {
       return intervals;
     }
-    const car = train.cars[0];
 
     return <>
       {intervals}
-      <circle cx={car.pointPosition.x * 20} cy={car.pointPosition.y * 20} r={3} className={"train"} />
-      {car.tail.map((position, index) => (
-        <circle key={index} cx={position.x * 20} cy={position.y * 20} r={2} className={"train"} />
+      {train.cars.map((car, index) => (
+        <circle key={index} cx={car.pointPosition.x * 20} cy={car.pointPosition.y * 20} r={3} className={"train"} />
       ))}
+      {train.cars.length > 1 ? (
+        <polyline
+          className={"train-line"}
+          points={train.cars.map(car => `${car.pointPosition.x * 20},${car.pointPosition.y * 20}`).join(" ")}
+        />
+      ) : null}
     </>;
   }
 
