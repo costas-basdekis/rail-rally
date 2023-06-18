@@ -31,36 +31,37 @@ export class Connection {
   }
 
   makeConnectionPath(): SVGPathElement {
+    const d = this.makePathD(1);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
+  makePathD(scale: number): string {
     if (this.arcConfiguration) {
-      return this.makeArcPath();
+      return this.makeArcPathD(scale);
     } else {
-      return this.makeLinePath();
+      return this.makeLinePathD(scale);
     }
   }
 
-  makeArcPath(): SVGPathElement {
+  makeArcPathD(scale: number): string {
     const {edge, corner, sweep, arcRadius} = this.arcConfiguration;
     const edgePosition = connectionDirections.positionByDirectionMap[edge];
     const cornerPosition = connectionDirections.positionByDirectionMap[corner];
-    const d = [
-      `M ${edgePosition.x} ${edgePosition.y}`,
-      `A ${arcRadius} ${arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x} ${cornerPosition.y}`,
+    return [
+      `M ${edgePosition.x * scale} ${edgePosition.y * scale}`,
+      `A ${arcRadius * scale} ${arcRadius * scale} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x * scale} ${cornerPosition.y * scale}`,
     ].join(" ");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
-    return path;
   }
 
-  makeLinePath(): SVGPathElement {
+  makeLinePathD(scale: number): string {
     const firstPosition = this.start ? connectionDirections.positionByDirectionMap[this.start] : connectionDirections.centerOffset;
     const secondPosition = this.end ? connectionDirections.positionByDirectionMap[this.end] : connectionDirections.centerOffset;
-    const d = [
-      `M ${firstPosition.x} ${firstPosition.y}`,
-      `L ${secondPosition.x} ${secondPosition.y}`,
+    return [
+      `M ${firstPosition.x * scale} ${firstPosition.y * scale}`,
+      `L ${secondPosition.x * scale} ${secondPosition.y * scale}`,
     ].join(" ");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
-    return path;
   }
 
   interpolate(progress: number): Position {

@@ -27,46 +27,22 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
     const {tile} = this.props;
     return (
       <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
-        {tile.internalConnections.map(([first, second]) => {
-          const connection = rails.connections.map[first][second];
-          if (!connection.arcConfiguration) {
-            const firstPosition = rails.connectionDirections.positionByDirectionMap[first];
-            const secondPosition = rails.connectionDirections.positionByDirectionMap[second];
-            return (
-              <line
-                key={`${first}:${second}`}
-                x1={firstPosition.x * 20} y1={firstPosition.y * 20}
-                x2={secondPosition.x * 20} y2={secondPosition.y * 20}
-                stroke={"black"}
-              />
-            );
-          }
-          const {edge, corner, sweep, arcRadius} = connection.arcConfiguration;
-          const edgePosition = rails.connectionDirections.positionByDirectionMap[edge]
-          const cornerPosition = rails.connectionDirections.positionByDirectionMap[corner]
-          return (
-            <path
-              key={`${first}:${second}`}
-              d={[
-                `M ${edgePosition.x * 20} ${edgePosition.y * 20}`,
-                `A ${20 * arcRadius} ${20 * arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x * 20} ${cornerPosition.y * 20}`,
-              ].join(" ")}
-              stroke={"black"}
-              fill={"none"}
-            />
-          );
-        })}
-        {tile.deadEndInternalConnections.map(direction => {
-          const position = rails.connectionDirections.positionByDirectionMap[direction];
-          return (
-            <line
-              key={direction}
-              x1={(rails.connectionDirections.centerOffset.x * 0.8 + position.x * 0.2) * 20} y1={(rails.connectionDirections.centerOffset.y * 0.8 + position.y * 0.2) * 20}
-              x2={position.x * 20} y2={position.y * 20}
-              stroke={"black"}
-            />
-          );
-        })}
+        {tile.internalConnections.map(([first, second]) => (
+          <path
+            key={`${first}:${second}`}
+            d={rails.connections.map[first][second].makePathD(20)}
+            stroke={"black"}
+            fill={"none"}
+          />
+        ))}
+        {tile.deadEndInternalConnections.map(direction => (
+          <path
+            key={direction}
+            d={rails.connections.map[null][direction].makePathD(20)}
+            stroke={"black"}
+            fill={"none"}
+          />
+        ))}
       </g>
     );
   }
