@@ -21,7 +21,16 @@ class Positions {
       y: start.y + (end.y - start.y) * progress,
     };
   }
+
+  add(first: Position, second: Position): Position {
+    return {
+      x: first.x + second.x,
+      y: first.y + second.y,
+    };
+  }
 }
+
+export const positions = new Positions();
 
 interface ArcConfiguration {
   edge: ConnectionDirection;
@@ -108,6 +117,79 @@ class ConnectionDirections {
         .filter(([, configurations]) => Object.entries(configurations).length)
     );
 
+  getConnectionLength(first: ConnectionDirection | null, second: ConnectionDirection | null): number {
+    if (!this.connectionLengthCache[first]?.[second]) {
+      this.connectionLengthCache[first] = this.connectionLengthCache[first] ?? {};
+      this.connectionLengthCache[first][second] = this.calculateConnectionLength(first, second);
+    }
+    return this.connectionLengthCache[first][second];
+  }
+  connectionLengthCache: {[key: ConnectionDirection | null]: {[key: ConnectionDirection | null]: number}} = {};
+
+  calculateConnectionLength(first: ConnectionDirection | null, second: ConnectionDirection | null): number {
+    const path: SVGPathElement = this.getConnectionPath(first, second);
+    return path.getTotalLength();
+  }
+
+  interpolateConnection(first: ConnectionDirection | null, second: ConnectionDirection | null, progress: number): Position {
+    const path = this.getConnectionPath(first, second);
+    const arcConfiguration = this.arcConfigurationMap[first]?.[second];
+    let effectiveProgress: number;
+    if (arcConfiguration) {
+      if (arcConfiguration.edge === first) {
+        effectiveProgress = progress;
+      } else {
+        effectiveProgress = this.getConnectionLength(first, second) - progress;
+      }
+    } else {
+      effectiveProgress = progress;
+    }
+    return path.getPointAtLength(effectiveProgress);
+  }
+
+  getConnectionPath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
+    if (!this.connectionPathCache[first]?.[second]) {
+      this.connectionPathCache[first] = this.connectionPathCache[first] ?? {};
+      this.connectionPathCache[first][second] = this.makeConnectionPath(first, second);
+    }
+    return this.connectionPathCache[first][second];
+  }
+  connectionPathCache: {[key: ConnectionDirection | null]: {[key: ConnectionDirection | null]: SVGPathElement}} = {};
+
+  makeConnectionPath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
+    const arcConfiguration = this.arcConfigurationMap[first]?.[second];
+    if (arcConfiguration) {
+      return this.makeArcPath(arcConfiguration);
+    } else {
+      return this.makeLinePath(first, second);
+    }
+  }
+
+  makeArcPath(arcConfiguration): SVGPathElement {
+    const {edge, corner, sweep, arcRadius} = arcConfiguration;
+    const edgePosition = this.positionByDirectionMap.get(edge)!
+    const cornerPosition = this.positionByDirectionMap.get(corner)!
+    const d = [
+      `M ${edgePosition.x} ${edgePosition.y}`,
+      `A ${arcRadius} ${arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x} ${cornerPosition.y}`,
+    ].join(" ");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
+  makeLinePath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
+    const firstPosition = first ? this.positionByDirectionMap.get(first)! : this.centerOffset;
+    const secondPosition = second ? this.positionByDirectionMap.get(second)! : this.centerOffset;
+    const d = [
+      `M ${firstPosition.x} ${firstPosition.y}`,
+      `L ${secondPosition.x} ${secondPosition.y}`,
+    ].join(" ");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
   areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
     return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
   }
@@ -128,5 +210,4 @@ class ConnectionDirections {
   }
 }
 
-export const positions = new Positions();
 export const connectionDirections = new ConnectionDirections();

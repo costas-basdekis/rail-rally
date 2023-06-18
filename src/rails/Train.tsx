@@ -54,25 +54,16 @@ class TrainCar implements TrainCarInit {
   }
 
   static startFromTileAndConnection(tile: Tile, incomingDirection: ConnectionDirection | null, outgoingDirection: ConnectionDirection | null, grid: Grid, distanceCovered: number, tileIndex: number, tail: Position[]): TrainCar {
-    const startDirectionOffset =
-      incomingDirection
-        ? connectionDirections.positionByDirectionMap.get(incomingDirection)!
-        : connectionDirections.centerOffset;
-    const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
-    const targetDirectionOffset =
-      outgoingDirection
-        ? connectionDirections.positionByDirectionMap.get(outgoingDirection)!
-        : connectionDirections.centerOffset;
-    const targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
     const nextTile =
       outgoingDirection
         ? grid.getTileInDirection(tile, outgoingDirection)
         : null;
+    const connectionLength = connectionDirections.getConnectionLength(incomingDirection, outgoingDirection);
     return new TrainCar({
-      startPosition,
-      targetPosition,
-      pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
-      connectionLength: positions.getPointDistance(startPosition, targetPosition),
+      startPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, 0)),
+      targetPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, connectionLength)),
+      pointPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, 0)),
+      connectionLength,
       connectionProgress: 0,
       distanceCovered,
       tile,
@@ -141,8 +132,7 @@ class TrainCar implements TrainCarInit {
         newHistoryNodes: [],
       };
     }
-    const newProgress = connectionProgress / this.connectionLength;
-    const pointPosition = positions.interpolatePoint(this.startPosition, this.targetPosition, newProgress);
+    const pointPosition = positions.add(this.tile, connectionDirections.interpolateConnection(this.incomingDirection, this.outgoingDirection, connectionProgress));
     let car = this.copy({
       pointPosition,
       connectionProgress,
@@ -150,6 +140,7 @@ class TrainCar implements TrainCarInit {
       tail: [this.pointPosition, ...this.tail].slice(0, 5),
     });
     const newHistoryNodes = [];
+    const newProgress = connectionProgress / this.connectionLength;
     if (newProgress === 1) {
       if (history) {
         car = car.getNext(grid, history);
