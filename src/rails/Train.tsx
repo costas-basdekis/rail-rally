@@ -132,11 +132,11 @@ class TrainCar implements TrainCarInit {
     const connectionProgressTarget = this.connectionProgress + connectionProgressIncrement;
     const connectionProgress = Math.min(this.connectionLength, connectionProgressTarget);
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
-    if (connectionProgress < 0) {
+    const newDistanceCovered = this.distanceCovered + connectionProgressIncrement - connectionProgressLeftover;
+    if (newDistanceCovered < 0) {
       return {
         car: this.copy({
-          connectionProgress,
-          distanceCovered: this.distanceCovered + connectionProgress,
+          distanceCovered: newDistanceCovered,
         }),
         newHistoryNodes: [],
       };
@@ -146,7 +146,7 @@ class TrainCar implements TrainCarInit {
     let car = this.copy({
       pointPosition,
       connectionProgress,
-      distanceCovered: this.distanceCovered + connectionProgressIncrement - connectionProgressLeftover,
+      distanceCovered: newDistanceCovered,
       tail: [this.pointPosition, ...this.tail].slice(0, 5),
     });
     const newHistoryNodes = [];
