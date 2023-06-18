@@ -42,44 +42,30 @@ class TrainCar implements TrainCarInit {
   nextTile: Tile | null;
   tail: Position[];
 
-  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
-    const direction = outgoingDirection;
-    const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
-    const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-    const targetPosition = {x: tile.x + directionOffset.x, y: tile.y + directionOffset.y};
-    return new TrainCar({
-      startPosition,
-      targetPosition,
-      pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
-      connectionLength: positions.getPointDistance(startPosition, targetPosition),
-      connectionProgress: 0,
-      distanceCovered,
-      tile,
-      direction,
-      incomingDirection: null,
-      outgoingDirection,
-      nextTile: grid.getTileInDirection(tile, direction),
-      tail: tail,
-    });
+  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
+    const targetDirections = tile.getConnectionsFrom(incomingDirection);
+    const outgoingDirection =
+      targetDirections.length
+        ? targetDirections[_.random(0, targetDirections.length - 1)]
+        : null;
+    return this.startFromTileAndConnection(tile, incomingDirection, outgoingDirection, grid, distanceCovered, tail);
   }
 
-  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
-    const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
+  static startFromTileAndConnection(tile: Tile, incomingDirection: ConnectionDirection | null, outgoingDirection: ConnectionDirection | null, grid: Grid, distanceCovered: number, tail: Position[]): TrainCar {
+    const startDirectionOffset =
+      incomingDirection
+        ? connectionDirections.positionByDirectionMap.get(incomingDirection)!
+        : connectionDirections.centerOffset;
     const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
-    const targetDirections = tile.getConnectionsFrom(incomingDirection);
-    let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null, outgoingDirection: ConnectionDirection | null;
-    if (targetDirections.length) {
-      direction = targetDirections[_.random(0, targetDirections.length - 1)];
-      const targetDirectionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-      targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
-      nextTile = grid.getTileInDirection(tile, direction);
-      outgoingDirection = direction;
-    } else {
-      targetPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
-      direction = connectionDirections.oppositeMap[incomingDirection];
-      nextTile = null;
-      outgoingDirection = null;
-    }
+    const targetDirectionOffset =
+      outgoingDirection
+        ? connectionDirections.positionByDirectionMap.get(outgoingDirection)!
+        : connectionDirections.centerOffset;
+    const targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
+    const nextTile =
+      outgoingDirection
+        ? grid.getTileInDirection(tile, outgoingDirection)
+        : null;
     return new TrainCar({
       startPosition,
       targetPosition,
@@ -88,7 +74,7 @@ class TrainCar implements TrainCarInit {
       connectionProgress: 0,
       distanceCovered,
       tile,
-      direction,
+      direction: outgoingDirection ?? connectionDirections.oppositeMap[incomingDirection],
       incomingDirection,
       outgoingDirection,
       nextTile,
@@ -137,10 +123,19 @@ class TrainCar implements TrainCarInit {
     };
   }
 
-  animate(grid: Grid, connectionProgressIncrement: number = 0.2): {car: TrainCar, newHistoryNodes: History} {
+  animate(grid: Grid, connectionProgressIncrement: number, history: History | null): {car: TrainCar, newHistoryNodes: History} {
     const connectionProgressTarget = this.connectionProgress + connectionProgressIncrement;
     const connectionProgress = Math.min(this.connectionLength, connectionProgressTarget);
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
+    if (connectionProgress < 0) {
+      return {
+        car: this.copy({
+          connectionProgress,
+          distanceCovered: this.distanceCovered + connectionProgress,
+        }),
+        newHistoryNodes: [],
+      };
+    }
     const newProgress = connectionProgress / this.connectionLength;
     const pointPosition = positions.interpolatePoint(this.startPosition, this.targetPosition, newProgress);
     let car = this.copy({
@@ -151,24 +146,37 @@ class TrainCar implements TrainCarInit {
     });
     const newHistoryNodes = [];
     if (newProgress === 1) {
-      car = car.getNext(grid);
+      if (history) {
+        car = car.getNext(grid,history);
+      } else {
+        car = car.createNext(grid);
+      }
       newHistoryNodes.unshift(car.makeHistoryNode());
       // TODO: if we didn't manage to make any progress, we should worry
       if (connectionProgressLeftover && connectionProgressLeftover < connectionProgressTarget) {
         let nextHistoryNodes;
-        ({car, newHistoryNodes: nextHistoryNodes} = car.animate(grid, connectionProgressLeftover));
+        ({car, newHistoryNodes: nextHistoryNodes} = car.animate(grid, connectionProgressLeftover, history));
         newHistoryNodes.unshift(...nextHistoryNodes);
       }
     }
     return {car, newHistoryNodes};
   }
 
-  getNext(this: TrainCar, grid: Grid): TrainCar {
+  createNext(grid: Grid): TrainCar {
     const nextDirection = connectionDirections.oppositeMap[this.direction];
     if (!this.nextTile) {
-      return TrainCar.startFromTileAndDeadEndDirection(this.tile, nextDirection, grid, this.distanceCovered, this.tail);
+      return TrainCar.startFromTileAndConnection(this.tile, null, nextDirection, grid, this.distanceCovered, this.tail);
     }
     return TrainCar.startFromTileAndDirection(this.nextTile, nextDirection, grid, this.distanceCovered, this.tail);
+  }
+
+  getNext(grid: Grid, history: History): TrainCar {
+    const node = history.findLast(node => node.distanceCovered <= this.distanceCovered);
+    if (!node) {
+      throw new Error("Could not find next node");
+    }
+    const nextDirection = connectionDirections.oppositeMap[this.direction];
+    return TrainCar.startFromTileAndConnection(node.tile, nextDirection, node.connection.to, grid, this.distanceCovered, this.tail);
   }
 }
 
@@ -193,7 +201,7 @@ export class Train implements TrainInit {
       return null;
     }
     const tile = tilesWithDeadEndConnections[_.random(0, tilesWithDeadEndConnections.length - 1)];
-    return this.startFromTile(tile, grid, [], 0, []);
+    return this.startFromTile(tile, grid);
   }
 
   static startNewFromConnection(grid: Grid): Train | null {
@@ -204,13 +212,13 @@ export class Train implements TrainInit {
       return null;
     }
     const tile = tilesWithConnections[_.random(0, tilesWithConnections.length - 1)];
-    return this.startFromTile(tile, grid, [], 0, []);
+    return this.startFromTile(tile, grid);
   }
 
-  static startFromTile(tile: Tile, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
+  static startFromTile(tile: Tile, grid: Grid): Train {
     const direction = tile.externalConnections[_.random(0, tile.externalConnections.length - 1)];
-    const car = TrainCar.startFromTileAndDeadEndDirection(tile, direction, grid, distanceCovered, tail);
-    return this.startWithCar(car, history);
+    const car = TrainCar.startFromTileAndConnection(tile, null, direction, grid, 0, []);
+    return this.startWithCar(car, []);
   }
 
   static startWithCar(car: TrainCar, history: History): Train {
@@ -232,7 +240,7 @@ export class Train implements TrainInit {
   }
 
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
-    const {car, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement);
+    const {car, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement, null);
     let history = this.history;
     if (newHistoryNodes.length) {
       history = [...newHistoryNodes, ...history];
