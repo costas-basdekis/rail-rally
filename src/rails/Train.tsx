@@ -177,8 +177,7 @@ class TrainCar implements TrainCarInit {
     if (!node) {
       throw new Error("Could not find next node");
     }
-    const nextDirection = connectionDirections.oppositeMap[this.direction];
-    return TrainCar.startFromTileAndConnection(node.tile, nextDirection, node.connection.to, grid, this.distanceCovered, this.tail);
+    return TrainCar.startFromTileAndConnection(node.tile, node.connection.from, node.connection.to, grid, this.distanceCovered, this.tileIndex + 1, this.tail);
   }
 }
 
