@@ -6,7 +6,7 @@ import {Grid} from "./Grid";
 interface HistoryNode {
   distanceCovered: number;
   tile: Tile;
-  connection: {from: ConnectionDirection, to: ConnectionDirection} | {from: ConnectionDirection, to: null} | {from: null, to: ConnectionDirection};
+  connection: {from: ConnectionDirection | null, to: ConnectionDirection | null};
 }
 
 type History = HistoryNode[];
@@ -19,6 +19,8 @@ interface TrainCarInit {
   connectionProgress: number;
   tile: Tile;
   direction: ConnectionDirection;
+  incomingDirection: ConnectionDirection | null;
+  outgoingDirection: ConnectionDirection | null;
   nextTile: Tile | null;
   tail: Position[];
 }
@@ -31,8 +33,62 @@ class TrainCar implements TrainCarInit {
   connectionProgress: number;
   tile: Tile;
   direction: ConnectionDirection;
+  incomingDirection: ConnectionDirection | null;
+  outgoingDirection: ConnectionDirection | null;
   nextTile: Tile | null;
   tail: Position[];
+
+  static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, tail: Position[]): TrainCar {
+    const direction = outgoingDirection;
+    const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
+    const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
+    const targetPosition = {x: tile.x + directionOffset.x, y: tile.y + directionOffset.y};
+    return new TrainCar({
+      startPosition,
+      targetPosition,
+      pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
+      connectionLength: positions.getPointDistance(startPosition, targetPosition),
+      connectionProgress: 0,
+      tile,
+      direction,
+      incomingDirection: null,
+      outgoingDirection,
+      nextTile: grid.getTileInDirection(tile, direction),
+      tail: tail,
+    });
+  }
+
+  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[]): TrainCar {
+    const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
+    const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
+    const targetDirections = tile.getConnectionsFrom(incomingDirection);
+    let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null, outgoingDirection: ConnectionDirection | null;
+    if (targetDirections.length) {
+      direction = targetDirections[_.random(0, targetDirections.length - 1)];
+      const targetDirectionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
+      targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
+      nextTile = grid.getTileInDirection(tile, direction);
+      outgoingDirection = direction;
+    } else {
+      targetPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
+      direction = connectionDirections.oppositeMap[incomingDirection];
+      nextTile = null;
+      outgoingDirection = null;
+    }
+    return new TrainCar({
+      startPosition,
+      targetPosition,
+      pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
+      connectionLength: positions.getPointDistance(startPosition, targetPosition),
+      connectionProgress: 0,
+      tile,
+      direction,
+      incomingDirection,
+      outgoingDirection,
+      nextTile,
+      tail: tail,
+    });
+  }
 
   constructor(init: TrainCarInit) {
     this.startPosition = init.startPosition;
@@ -42,6 +98,8 @@ class TrainCar implements TrainCarInit {
     this.connectionProgress = init.connectionProgress;
     this.tile = init.tile;
     this.direction = init.direction;
+    this.incomingDirection = init.incomingDirection;
+    this.outgoingDirection = init.outgoingDirection;
     this.nextTile = init.nextTile;
     this.tail = init.tail;
   }
@@ -55,10 +113,20 @@ class TrainCar implements TrainCarInit {
       connectionProgress: this.connectionProgress,
       tile: this.tile,
       direction: this.direction,
+      incomingDirection: this.incomingDirection,
+      outgoingDirection: this.outgoingDirection,
       nextTile: this.nextTile,
       tail: this.tail,
       ...updates,
     });
+  }
+
+  makeHistoryNode(distanceCovered: number): HistoryNode {
+    return {
+      distanceCovered,
+      tile: this.tile,
+      connection: {from: this.incomingDirection, to: this.outgoingDirection},
+    };
   }
 }
 
@@ -101,81 +169,23 @@ export class Train implements TrainInit {
   }
 
   static startFromTileAndDeadEndDirection(tile: Tile, outgoingDirection: ConnectionDirection, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
-    const direction = outgoingDirection;
-    const startPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
-    const directionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-    const targetPosition = {x: tile.x + directionOffset.x, y: tile.y + directionOffset.y};
+    const car = TrainCar.startFromTileAndDeadEndDirection(tile, outgoingDirection, grid, tail);
+    return this.startWithCar(car, distanceCovered, history);
+  }
+
+  static startFromTileAndDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
+    const car = TrainCar.startFromTileAndDirection(tile, incomingDirection, grid, tail);
+    return this.startWithCar(car, distanceCovered, history);
+  }
+
+  static startWithCar(car: TrainCar, distanceCovered: number, history: History): Train {
     const newHistory = [
-      {
-        distanceCovered,
-        tile,
-        connection: {from: null, to: direction},
-      },
+      car.makeHistoryNode(distanceCovered),
       ...history,
     ].slice(0, 5);
     return new Train({
       cars: [
-        new TrainCar({
-          startPosition,
-          targetPosition,
-          pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
-          connectionLength: positions.getPointDistance(startPosition, targetPosition),
-          connectionProgress: 0,
-          tile,
-          direction,
-          nextTile: grid.getTileInDirection(tile, direction),
-          tail: tail,
-        }),
-      ],
-      distanceCovered,
-      history: newHistory,
-    });
-  }
-
-  static startFromTileDirection(tile: Tile, incomingDirection: ConnectionDirection, grid: Grid, tail: Position[], distanceCovered: number, history: History): Train {
-    const startDirectionOffset = connectionDirections.positionByDirectionMap.get(incomingDirection)!;
-    const startPosition = {x: tile.x + startDirectionOffset.x, y: tile.y + startDirectionOffset.y};
-    const targetDirections = tile.getConnectionsFrom(incomingDirection);
-    let targetPosition: Position, direction: ConnectionDirection, nextTile: Tile | null, newHistory: History;
-    if (targetDirections.length) {
-      direction = targetDirections[_.random(0, targetDirections.length - 1)];
-      const targetDirectionOffset = connectionDirections.positionByDirectionMap.get(direction)!;
-      targetPosition = {x: tile.x + targetDirectionOffset.x, y: tile.y + targetDirectionOffset.y};
-      nextTile = grid.getTileInDirection(tile, direction);
-      newHistory = [
-        {
-          distanceCovered,
-          tile,
-          connection: {from: incomingDirection, to: direction},
-        },
-        ...history,
-      ].slice(0, 5);
-    } else {
-      targetPosition = {x: tile.x + 0.5, y: tile.y + 0.5};
-      direction = connectionDirections.oppositeMap[incomingDirection];
-      nextTile = null;
-      newHistory = [
-        {
-          distanceCovered,
-          tile,
-          connection: {from: incomingDirection, to: null},
-        },
-        ...history,
-      ].slice(0, 5);
-    }
-    return new Train({
-      cars: [
-        new TrainCar({
-          startPosition,
-          targetPosition,
-          pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
-          connectionLength: positions.getPointDistance(startPosition, targetPosition),
-          connectionProgress: 0,
-          tile,
-          direction,
-          nextTile,
-          tail: tail,
-        }),
+        car,
       ],
       distanceCovered,
       history: newHistory,
@@ -236,6 +246,6 @@ export class Train implements TrainInit {
     if (!car.nextTile) {
       return Train.startFromTileAndDeadEndDirection(car.tile, nextDirection, grid, car.tail, this.distanceCovered, this.history);
     }
-    return Train.startFromTileDirection(car.nextTile, nextDirection, grid, car.tail, this.distanceCovered, this.history);
+    return Train.startFromTileAndDirection(car.nextTile, nextDirection, grid, car.tail, this.distanceCovered, this.history);
   }
 }
