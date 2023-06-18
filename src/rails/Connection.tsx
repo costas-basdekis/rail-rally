@@ -75,7 +75,8 @@ export class Connection {
       this.reverseInterpolation
         ? (this.length - progress)
         : progress;
-    return this.path.getPointAtLength(effectiveProgress);
+    const {x, y} = this.path.getPointAtLength(effectiveProgress);
+    return {x, y};
   }
 }
 
