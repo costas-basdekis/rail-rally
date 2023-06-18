@@ -222,15 +222,17 @@ export class Train implements TrainInit {
   static startFromTile(tile: Tile, grid: Grid): Train {
     const direction = tile.externalConnections[_.random(0, tile.externalConnections.length - 1)];
     const car = TrainCar.startFromTileAndConnection(tile, null, direction, grid, 0, 0, []);
-    return this.startWithCar(car, []);
+    return this.startWithCar(car);
   }
 
-  static startWithCar(car: TrainCar, history: History): Train {
+  static startWithCar(car: TrainCar): Train {
     return new Train({
       cars: [
         car,
       ],
-      history,
+      history: [
+        car.makeHistoryNode(),
+      ],
     });
   }
 
@@ -240,11 +242,17 @@ export class Train implements TrainInit {
   }
 
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
-    const {car, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement, null);
+    const {car: firstCar, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement, null);
     let history = this.history;
     if (newHistoryNodes.length) {
-      history = [...newHistoryNodes, ...history];
+      history = [...newHistoryNodes, ...history].slice(0, this.cars.length);
     }
-    return Train.startWithCar(car, history);
+    return new Train({
+      cars: [
+        firstCar,
+        ...this.cars.slice(1).map(car => car.animate(grid, connectionProgressIncrement, history).car),
+      ],
+      history,
+    });
   }
 }
