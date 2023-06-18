@@ -118,76 +118,13 @@ class ConnectionDirections {
     );
 
   getConnectionLength(first: ConnectionDirection | null, second: ConnectionDirection | null): number {
-    if (!this.connectionLengthCache[first]?.[second]) {
-      this.connectionLengthCache[first] = this.connectionLengthCache[first] ?? {};
-      this.connectionLengthCache[first][second] = this.calculateConnectionLength(first, second);
-    }
-    return this.connectionLengthCache[first][second];
-  }
-  connectionLengthCache: {[key: ConnectionDirection | null]: {[key: ConnectionDirection | null]: number}} = {};
-
-  calculateConnectionLength(first: ConnectionDirection | null, second: ConnectionDirection | null): number {
-    const path: SVGPathElement = this.getConnectionPath(first, second);
-    return path.getTotalLength();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return connections.map[first][second].length;
   }
 
   interpolateConnection(first: ConnectionDirection | null, second: ConnectionDirection | null, progress: number): Position {
-    const path = this.getConnectionPath(first, second);
-    const arcConfiguration = this.arcConfigurationMap[first]?.[second];
-    let effectiveProgress: number;
-    if (arcConfiguration) {
-      if (arcConfiguration.edge === first) {
-        effectiveProgress = progress;
-      } else {
-        effectiveProgress = this.getConnectionLength(first, second) - progress;
-      }
-    } else {
-      effectiveProgress = progress;
-    }
-    return path.getPointAtLength(effectiveProgress);
-  }
-
-  getConnectionPath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
-    if (!this.connectionPathCache[first]?.[second]) {
-      this.connectionPathCache[first] = this.connectionPathCache[first] ?? {};
-      this.connectionPathCache[first][second] = this.makeConnectionPath(first, second);
-    }
-    return this.connectionPathCache[first][second];
-  }
-  connectionPathCache: {[key: ConnectionDirection | null]: {[key: ConnectionDirection | null]: SVGPathElement}} = {};
-
-  makeConnectionPath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
-    const arcConfiguration = this.arcConfigurationMap[first]?.[second];
-    if (arcConfiguration) {
-      return this.makeArcPath(arcConfiguration);
-    } else {
-      return this.makeLinePath(first, second);
-    }
-  }
-
-  makeArcPath(arcConfiguration): SVGPathElement {
-    const {edge, corner, sweep, arcRadius} = arcConfiguration;
-    const edgePosition = this.positionByDirectionMap[edge];
-    const cornerPosition = this.positionByDirectionMap[corner];
-    const d = [
-      `M ${edgePosition.x} ${edgePosition.y}`,
-      `A ${arcRadius} ${arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x} ${cornerPosition.y}`,
-    ].join(" ");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
-    return path;
-  }
-
-  makeLinePath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
-    const firstPosition = first ? this.positionByDirectionMap[first] : this.centerOffset;
-    const secondPosition = second ? this.positionByDirectionMap[second] : this.centerOffset;
-    const d = [
-      `M ${firstPosition.x} ${firstPosition.y}`,
-      `L ${secondPosition.x} ${secondPosition.y}`,
-    ].join(" ");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
-    return path;
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return connections.map[first][second].interpolate(progress);
   }
 
   areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
@@ -211,3 +148,75 @@ class ConnectionDirections {
 }
 
 export const connectionDirections = new ConnectionDirections();
+
+export class Connection {
+  start: ConnectionDirection | null;
+  end: ConnectionDirection | null;
+  path: SVGPathElement;
+  length: number;
+  arcConfiguration: ArcConfiguration | null;
+  reverseInterpolation: boolean;
+  startPoint: Position;
+  endPoint: Position;
+
+  constructor(start: ConnectionDirection | null, end: ConnectionDirection | null) {
+    this.start = start;
+    this.end = end;
+    this.arcConfiguration = connectionDirections.arcConfigurationMap[this.start]?.[this.end] ?? null;
+    this.path = this.makeConnectionPath();
+    this.length = this.path.getTotalLength();
+    this.reverseInterpolation = this.end === this.arcConfiguration?.edge;
+    this.startPoint = this.interpolate(0);
+    this.endPoint = this.interpolate(this.length);
+  }
+
+  makeConnectionPath(): SVGPathElement {
+    if (this.arcConfiguration) {
+      return this.makeArcPath();
+    } else {
+      return this.makeLinePath();
+    }
+  }
+
+  makeArcPath(): SVGPathElement {
+    const {edge, corner, sweep, arcRadius} = this.arcConfiguration;
+    const edgePosition = connectionDirections.positionByDirectionMap[edge];
+    const cornerPosition = connectionDirections.positionByDirectionMap[corner];
+    const d = [
+      `M ${edgePosition.x} ${edgePosition.y}`,
+      `A ${arcRadius} ${arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x} ${cornerPosition.y}`,
+    ].join(" ");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
+  makeLinePath(): SVGPathElement {
+    const firstPosition = this.start ? connectionDirections.positionByDirectionMap[this.start] : connectionDirections.centerOffset;
+    const secondPosition = this.end ? connectionDirections.positionByDirectionMap[this.end] : connectionDirections.centerOffset;
+    const d = [
+      `M ${firstPosition.x} ${firstPosition.y}`,
+      `L ${secondPosition.x} ${secondPosition.y}`,
+    ].join(" ");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    return path;
+  }
+
+  interpolate(progress: number): Position {
+    const effectiveProgress: number =
+      this.reverseInterpolation
+        ? (this.length - progress)
+        : progress;
+    return this.path.getPointAtLength(effectiveProgress);
+  }
+}
+
+class Connections {
+  map: {[key: ConnectionDirection | "null"]: {[key: ConnectionDirection | "null"]: Connection}} = Object.fromEntries(
+    [null, ...connectionDirections.items].map(
+      first => [first, Object.fromEntries([null, ...connectionDirections.items].filter(second => first !== second).map(
+        second => [second, new Connection(first, second)] as const))] as const));
+}
+
+export const connections = new Connections();
