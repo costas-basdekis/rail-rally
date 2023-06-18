@@ -30,8 +30,8 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
         {tile.internalConnections.map(([first, second]) => {
           const arcConfiguration = rails.connectionDirections.arcConfigurationMap[first]?.[second];
           if (!arcConfiguration) {
-            const firstPosition = rails.connectionDirections.positionByDirectionMap.get(first)!;
-            const secondPosition = rails.connectionDirections.positionByDirectionMap.get(second)!;
+            const firstPosition = rails.connectionDirections.positionByDirectionMap[first];
+            const secondPosition = rails.connectionDirections.positionByDirectionMap[second];
             return (
               <line
                 key={`${first}:${second}`}
@@ -42,8 +42,8 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
             );
           }
           const {edge, corner, sweep, arcRadius} = arcConfiguration;
-          const edgePosition = rails.connectionDirections.positionByDirectionMap.get(edge)!
-          const cornerPosition = rails.connectionDirections.positionByDirectionMap.get(corner)!
+          const edgePosition = rails.connectionDirections.positionByDirectionMap[edge]
+          const cornerPosition = rails.connectionDirections.positionByDirectionMap[corner]
           return (
             <path
               key={`${first}:${second}`}
@@ -57,7 +57,7 @@ class RTileConnections extends Component<{tile: rails.Tile}, {}> {
           );
         })}
         {tile.deadEndInternalConnections.map(direction => {
-          const position = rails.connectionDirections.positionByDirectionMap.get(direction)!;
+          const position = rails.connectionDirections.positionByDirectionMap[direction];
           return (
             <line
               key={direction}

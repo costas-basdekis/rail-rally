@@ -77,16 +77,16 @@ class ConnectionDirections {
 
   arcRadius: number = 1.5;
 
-  positionByDirectionMap: Map<ConnectionDirection, Position> = new Map([
-    ["top", {x: 0.5, y: 0}],
-    ["bottom", {x: 0.5, y: 1}],
-    ["left", {x: 0, y: 0.5}],
-    ["right", {x: 1, y: 0.5}],
-    ["top-left", {x: 0, y: 0}],
-    ["top-right", {x: 1, y: 0}],
-    ["bottom-right", {x: 1, y: 1}],
-    ["bottom-left", {x: 0, y: 1}],
-  ]);
+  positionByDirectionMap: {[key: ConnectionDirection]: Position} = {
+    top: {x: 0.5, y: 0},
+    bottom: {x: 0.5, y: 1},
+    left: {x: 0, y: 0.5},
+    right: {x: 1, y: 0.5},
+    "top-left": {x: 0, y: 0},
+    "top-right": {x: 1, y: 0},
+    "bottom-right": {x: 1, y: 1},
+    "bottom-left": {x: 0, y: 1},
+  };
 
   oppositeMap: { [key: ConnectionDirection]: ConnectionDirection } =
     Object.fromEntries(this.items.map((direction, index) => [direction, (this.items)[(index + 4) % 8]]));
@@ -167,8 +167,8 @@ class ConnectionDirections {
 
   makeArcPath(arcConfiguration): SVGPathElement {
     const {edge, corner, sweep, arcRadius} = arcConfiguration;
-    const edgePosition = this.positionByDirectionMap.get(edge)!
-    const cornerPosition = this.positionByDirectionMap.get(corner)!
+    const edgePosition = this.positionByDirectionMap[edge];
+    const cornerPosition = this.positionByDirectionMap[corner];
     const d = [
       `M ${edgePosition.x} ${edgePosition.y}`,
       `A ${arcRadius} ${arcRadius} 0 0 ${sweep ? 1 : 0} ${cornerPosition.x} ${cornerPosition.y}`,
@@ -179,8 +179,8 @@ class ConnectionDirections {
   }
 
   makeLinePath(first: ConnectionDirection | null, second: ConnectionDirection | null): SVGPathElement {
-    const firstPosition = first ? this.positionByDirectionMap.get(first)! : this.centerOffset;
-    const secondPosition = second ? this.positionByDirectionMap.get(second)! : this.centerOffset;
+    const firstPosition = first ? this.positionByDirectionMap[first] : this.centerOffset;
+    const secondPosition = second ? this.positionByDirectionMap[second] : this.centerOffset;
     const d = [
       `M ${firstPosition.x} ${firstPosition.y}`,
       `L ${secondPosition.x} ${secondPosition.y}`,
