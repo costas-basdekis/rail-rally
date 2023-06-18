@@ -150,12 +150,12 @@ class TrainCar implements TrainCarInit {
     const newHistoryNodes = [];
     if (newProgress === 1) {
       car = car.getNext(grid);
-      newHistoryNodes.push(car.makeHistoryNode());
+      newHistoryNodes.unshift(car.makeHistoryNode());
       // TODO: if we didn't manage to make any progress, we should worry
       if (connectionProgressLeftover && connectionProgressLeftover < connectionProgressTarget) {
         let nextHistoryNodes;
         ({car, newHistoryNodes: nextHistoryNodes} = car.animate(grid, connectionProgressLeftover));
-        newHistoryNodes.push(...nextHistoryNodes);
+        newHistoryNodes.unshift(...nextHistoryNodes);
       }
     }
     return {car, newHistoryNodes};
@@ -229,7 +229,7 @@ export class Train implements TrainInit {
     const {car, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement);
     let history = this.history;
     if (newHistoryNodes.length) {
-      history = [...history, ...newHistoryNodes];
+      history = [...newHistoryNodes, ...history];
     }
     return Train.startWithCar(car, history);
   }
