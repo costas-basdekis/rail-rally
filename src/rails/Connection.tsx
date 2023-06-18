@@ -1,4 +1,4 @@
-import {Position} from "@/rails/Position";
+import {Position, positions} from "@/rails/Position";
 import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
 
 interface ArcConfiguration {
@@ -56,8 +56,14 @@ export class Connection {
   }
 
   makeLinePathD(scale: number): string {
-    const firstPosition = this.start ? connectionDirections.positionByDirectionMap[this.start] : connectionDirections.centerOffset;
-    const secondPosition = this.end ? connectionDirections.positionByDirectionMap[this.end] : connectionDirections.centerOffset;
+    let firstPosition = this.start ? connectionDirections.positionByDirectionMap[this.start] : connectionDirections.centerOffset;
+    let secondPosition = this.end ? connectionDirections.positionByDirectionMap[this.end] : connectionDirections.centerOffset;
+    // For dead-end, move the center end a bit further from the center
+    if (!this.start) {
+      firstPosition = positions.add(firstPosition, secondPosition, 0.8, 0.2);
+    } else if (!this.end) {
+      secondPosition = positions.add(firstPosition, secondPosition, 0.2, 0.8);
+    }
     return [
       `M ${firstPosition.x * scale} ${firstPosition.y * scale}`,
       `L ${secondPosition.x * scale} ${secondPosition.y * scale}`,

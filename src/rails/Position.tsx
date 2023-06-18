@@ -16,10 +16,10 @@ class Positions {
     };
   }
 
-  add(first: Position, second: Position): Position {
+  add(first: Position, second: Position, firstScale: number = 1, secondScale: number = 1): Position {
     return {
-      x: first.x + second.x,
-      y: first.y + second.y,
+      x: first.x * firstScale + second.x * secondScale,
+      y: first.y * firstScale + second.y * secondScale,
     };
   }
 }
