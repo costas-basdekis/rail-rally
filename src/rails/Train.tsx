@@ -241,6 +241,22 @@ export class Train implements TrainInit {
     this.history = init.history;
   }
 
+  addCars(count: number, carDistance: number): Train {
+    const lastCar = this.cars[this.cars.length - 1];
+    if (lastCar.distanceCovered !== 0) {
+      throw new Error("Can only add cars at the beginning");
+    }
+    return new Train({
+      cars: [
+        ...this.cars,
+        ..._.range(count).map(index => lastCar.copy({
+          distanceCovered: lastCar.distanceCovered - carDistance * (index + 1),
+        })),
+      ],
+      history: this.history,
+    });
+  }
+
   animate(grid: Grid, connectionProgressIncrement: number = 0.2): Train {
     const {car: firstCar, newHistoryNodes} = this.cars[0].animate(grid, connectionProgressIncrement, null);
     let history = this.history;

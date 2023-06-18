@@ -33,7 +33,7 @@ export class RTrain extends Component<RTrainProps, {}> {
 
   recheckTrain = () => {
     const {grid} = this.props;
-    const train = rails.Train.startNew(grid);
+    const train = rails.Train.startNew(grid)?.addCars(3, 1);
     if (!train) {
       return;
     }
