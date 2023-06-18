@@ -1,5 +1,12 @@
 import _ from "underscore";
-import {ConnectionDirection, connectionDirections, Position, positions} from "./ConnectionDirection";
+import {
+  Connection,
+  ConnectionDirection,
+  connectionDirections,
+  connections,
+  Position,
+  positions
+} from "./ConnectionDirection";
 import {Tile} from "./Tile";
 import {Grid} from "./Grid";
 // noinspection TypeScriptCheckImport
@@ -30,6 +37,7 @@ interface TrainCarInit {
 }
 
 class TrainCar implements TrainCarInit {
+  connection: Connection;
   startPosition: Position;
   targetPosition: Position;
   pointPosition: Position;
@@ -58,11 +66,12 @@ class TrainCar implements TrainCarInit {
       outgoingDirection
         ? grid.getTileInDirection(tile, outgoingDirection)
         : null;
-    const connectionLength = connectionDirections.getConnectionLength(incomingDirection, outgoingDirection);
+    const connection = connections.map[incomingDirection][outgoingDirection];
+    const connectionLength = connection.length;
     return new TrainCar({
-      startPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, 0)),
-      targetPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, connectionLength)),
-      pointPosition: positions.add(tile, connectionDirections.interpolateConnection(incomingDirection, outgoingDirection, 0)),
+      startPosition: positions.add(tile, connection.startPoint),
+      targetPosition: positions.add(tile, connection.endPoint),
+      pointPosition: positions.add(tile, connection.startPoint),
       connectionLength,
       connectionProgress: 0,
       distanceCovered,
@@ -77,6 +86,7 @@ class TrainCar implements TrainCarInit {
   }
 
   constructor(init: TrainCarInit) {
+    this.connection = connections.map[init.incomingDirection][init.outgoingDirection];
     this.startPosition = init.startPosition;
     this.targetPosition = init.targetPosition;
     this.pointPosition = init.pointPosition;
@@ -132,7 +142,7 @@ class TrainCar implements TrainCarInit {
         newHistoryNodes: [],
       };
     }
-    const pointPosition = positions.add(this.tile, connectionDirections.interpolateConnection(this.incomingDirection, this.outgoingDirection, connectionProgress));
+    const pointPosition = positions.add(this.tile, this.connection.interpolate(connectionProgress));
     let car = this.copy({
       pointPosition,
       connectionProgress,

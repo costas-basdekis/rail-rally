@@ -117,16 +117,6 @@ class ConnectionDirections {
         .filter(([, configurations]) => Object.entries(configurations).length)
     );
 
-  getConnectionLength(first: ConnectionDirection | null, second: ConnectionDirection | null): number {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return connections.map[first][second].length;
-  }
-
-  interpolateConnection(first: ConnectionDirection | null, second: ConnectionDirection | null, progress: number): Position {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return connections.map[first][second].interpolate(progress);
-  }
-
   areAllDirectionsNeighbours(directions: ConnectionDirection[]): boolean {
     return directions.every(first => directions.some(second => first !== second && this.areTwoDirectionsNeighbours(first, second)));
   }
