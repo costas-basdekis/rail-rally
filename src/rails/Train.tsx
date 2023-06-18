@@ -1,5 +1,5 @@
 import _ from "underscore";
-import {ConnectionDirection, connectionDirections, Position} from "./ConnectionDirection";
+import {ConnectionDirection, connectionDirections, Position, positions} from "./ConnectionDirection";
 import {Tile} from "./Tile";
 import {Grid} from "./Grid";
 
@@ -118,8 +118,8 @@ export class Train implements TrainInit {
         new TrainCar({
           startPosition,
           targetPosition,
-          pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
-          connectionLength: this.getPointDistance(startPosition, targetPosition),
+          pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
+          connectionLength: positions.getPointDistance(startPosition, targetPosition),
           connectionProgress: 0,
           tile,
           direction,
@@ -168,8 +168,8 @@ export class Train implements TrainInit {
         new TrainCar({
           startPosition,
           targetPosition,
-          pointPosition: this.interpolatePoint(startPosition, targetPosition, 0),
-          connectionLength: this.getPointDistance(startPosition, targetPosition),
+          pointPosition: positions.interpolatePoint(startPosition, targetPosition, 0),
+          connectionLength: positions.getPointDistance(startPosition, targetPosition),
           connectionProgress: 0,
           tile,
           direction,
@@ -180,18 +180,6 @@ export class Train implements TrainInit {
       distanceCovered,
       history: newHistory,
     });
-  }
-
-  static getPointDistance(first: Position, second: Position): number {
-    const dX = first.x - second.x, dY = first.y - second.y;
-    return Math.sqrt(dX * dX + dY * dY);
-  }
-
-  static interpolatePoint(start: Position, end: Position, progress: number): Position {
-    return {
-      x: start.x + (end.x - start.x) * progress,
-      y: start.y + (end.y - start.y) * progress,
-    };
   }
 
   constructor(init : TrainInit) {
@@ -209,7 +197,7 @@ export class Train implements TrainInit {
     const connectionProgress = Math.min(car.connectionLength, connectionProgressTarget);
     const connectionProgressLeftover = connectionProgressTarget - connectionProgress;
     const newProgress = connectionProgress / car.connectionLength;
-    const pointPosition = Train.interpolatePoint(car.startPosition, car.targetPosition, newProgress);
+    const pointPosition = positions.interpolatePoint(car.startPosition, car.targetPosition, newProgress);
     let train = this.copy({
       cars: [
         car.copy({

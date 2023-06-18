@@ -9,6 +9,20 @@ export interface Position {
   y: number;
 }
 
+class Positions {
+  getPointDistance(first: Position, second: Position): number {
+    const dX = first.x - second.x, dY = first.y - second.y;
+    return Math.sqrt(dX * dX + dY * dY);
+  }
+
+  interpolatePoint(start: Position, end: Position, progress: number): Position {
+    return {
+      x: start.x + (end.x - start.x) * progress,
+      y: start.y + (end.y - start.y) * progress,
+    };
+  }
+}
+
 interface ArcConfiguration {
   edge: ConnectionDirection;
   corner: ConnectionDirection;
@@ -113,4 +127,5 @@ class ConnectionDirections {
   }
 }
 
+export const positions = new Positions();
 export const connectionDirections = new ConnectionDirections();
