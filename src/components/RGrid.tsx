@@ -16,6 +16,7 @@ interface RGridState {
   searchStart: rails.Tile | null,
   searchEnd: rails.Tile | null,
   searchPath: rails.Path | null,
+  tileConnectionsOnSearchPath: {[key: string]: rails.PathNode[]},
 }
 
 export class RGrid extends Component<RGridProps, RGridState> {
@@ -25,13 +26,16 @@ export class RGrid extends Component<RGridProps, RGridState> {
     searchStart: null,
     searchEnd: null,
     searchPath: null,
+    tileConnectionsOnSearchPath: {},
   };
 
   componentDidUpdate(prevProps: Readonly<RGridProps>) {
     if (prevProps.mode !== this.props.mode) {
       switch (this.props.mode) {
         case "build":
-          this.setState<"searchStart" | "searchEnd" | "searchPath">({searchStart: null, searchEnd: null, searchPath: null});
+          this.setState<"searchStart" | "searchEnd" | "searchPath" | "tileConnectionsOnSearchPath">({
+            searchStart: null, searchEnd: null, searchPath: null, tileConnectionsOnSearchPath: {},
+          });
           break;
         case "search":
           this.setState<"connectableTiles">({connectableTiles: []});
@@ -42,7 +46,7 @@ export class RGrid extends Component<RGridProps, RGridState> {
 
   render() {
     const {grid, editable, mode} = this.props;
-    const {selectedTile, connectableTiles, searchStart, searchEnd} = this.state;
+    const {selectedTile, connectableTiles, searchStart, searchEnd, tileConnectionsOnSearchPath} = this.state;
     return [
       ...Iterator.from(grid.tiles()).map(tile => (
         <RTile.Background
@@ -58,6 +62,7 @@ export class RGrid extends Component<RGridProps, RGridState> {
         <RTile.Connections
           key={`${tile.positionStr}-connections`}
           tile={tile}
+          highlightedConnections={tileConnectionsOnSearchPath[tile.positionStr]}
         />
       )),
     ];
@@ -103,13 +108,17 @@ export class RGrid extends Component<RGridProps, RGridState> {
   };
 
   private onSearchTileClick(tile: rails.Tile) {
-    this.setState<"searchStart" | "searchEnd" | "searchPath">(({searchStart, searchEnd}) => {
+    this.setState<"searchStart" | "searchEnd" | "searchPath" | "tileConnectionsOnSearchPath">(({searchStart, searchEnd}) => {
       if (!searchStart || searchEnd) {
-        return {searchStart: tile, searchEnd: null, searchPath: null};
+        return {searchStart: tile, searchEnd: null, searchPath: null, tileConnectionsOnSearchPath: {}};
       } else {
         const searchPath = rails.PathFinder.findBestPath(this.props.grid, searchStart, tile);
-        console.log(searchPath);
-        return {searchStart, searchEnd: tile, searchPath: searchPath};
+        const tileConnectionsOnSearchPath = {};
+        for (const node of searchPath ?? []) {
+          tileConnectionsOnSearchPath[node.tile.positionStr] = tileConnectionsOnSearchPath[node.tile.positionStr] ?? [];
+          tileConnectionsOnSearchPath[node.tile.positionStr].push(node);
+        }
+        return {searchStart, searchEnd: tile, searchPath: searchPath, tileConnectionsOnSearchPath};
       }
     });
   }

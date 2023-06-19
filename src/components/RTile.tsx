@@ -22,29 +22,49 @@ class RTileBackground extends Component<RTileProps, {}> {
   };
 }
 
-class RTileConnections extends Component<{tile: rails.Tile}, {}> {
+interface RTileConnectionsProps {
+  tile: rails.Tile;
+  highlightedConnections?: rails.PathNode[] | undefined;
+}
+
+class RTileConnections extends Component<RTileConnectionsProps, {}> {
   render() {
     const {tile} = this.props;
     return (
       <g transform={`translate(${tile.x * 20}, ${tile.y * 20})`}>
-        {tile.internalConnections.map(([first, second]) => (
-          <path
-            key={`${first}:${second}`}
-            d={rails.connections.map[first][second].makePathD(20)}
-            stroke={"black"}
-            fill={"none"}
-          />
-        ))}
-        {tile.deadEndInternalConnections.map(direction => (
-          <path
-            key={direction}
-            d={rails.connections.map[null][direction].makePathD(20)}
-            stroke={"black"}
-            fill={"none"}
-          />
-        ))}
+        {tile.internalConnections.map(([first, second]) => {
+          const highlighted = this.isConnectionHighlighted(first, second);
+          return (
+            <path
+              key={`${first}:${second}`}
+              d={rails.connections.map[first][second].makePathD(20)}
+              stroke={highlighted ? "green" : "black"}
+              strokeWidth={highlighted ? 5 : 1}
+              fill={"none"}
+            />
+          );
+        })}
+        {tile.deadEndInternalConnections.map(direction => {
+          const highlighted = this.isConnectionHighlighted(null, direction);
+          return (
+            <path
+              key={direction}
+              d={rails.connections.map[null][direction].makePathD(20)}
+              stroke={highlighted ? "green" : "black"}
+              strokeWidth={highlighted ? 5 : 1}
+              fill={"none"}
+            />
+          );
+        })}
       </g>
     );
+  }
+
+  isConnectionHighlighted(first: rails.ConnectionDirection | null, second: rails.ConnectionDirection | null) {
+    const directions = [first, second];
+    return this.props.highlightedConnections?.some(({incomingDirection, outgoingDirection}) => {
+      return directions.includes(incomingDirection) && directions.includes(outgoingDirection);
+    });
   }
 }
 

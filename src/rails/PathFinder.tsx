@@ -80,7 +80,7 @@ class SearchNode {
   }
 }
 
-interface PathNode {
+export interface PathNode {
   tile: Tile;
   incomingDirection: ConnectionDirection | null;
   outgoingDirection: ConnectionDirection | null;
