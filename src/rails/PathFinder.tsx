@@ -1,7 +1,6 @@
 import {Grid} from "@/rails/Grid";
 import {Tile} from "@/rails/Tile";
 import {ConnectionDirection, connectionDirections} from "@/rails/ConnectionDirection";
-import {Position} from "@/rails/Position";
 import {connections} from "@/rails/Connection";
 
 class SearchNode {
@@ -14,26 +13,7 @@ class SearchNode {
   previous: SearchNode | null;
 
   static getEdgeKey(tile: Tile, outgoingDirection: ConnectionDirection | null): string {
-    if (!outgoingDirection) {
-      return `${tile.x},${tile.y}`;
-    }
-    const other = connectionDirections.getTilePositionInDirection(tile, outgoingDirection);
-    let first: Position, second: Position;
-    switch (outgoingDirection) {
-      case "bottom":
-      case "bottom-right":
-      case "right":
-      case "top-right":
-        [first, second] = [tile, other];
-        break;
-      case "top":
-      case "top-left":
-      case "left":
-      case "bottom-left":
-        [first, second] = [other, tile];
-        break;
-    }
-    return `${first.x},${first.y},${second.x},${second.y}`;
+    return `${tile.x},${tile.y}|${outgoingDirection}`;
   }
 
   constructor(grid: Grid, tile: Tile, incomingDirection: ConnectionDirection | null, outgoingDirection: ConnectionDirection | null, distanceCovered: number, previous: SearchNode | null) {
