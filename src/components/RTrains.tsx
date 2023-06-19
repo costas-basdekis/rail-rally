@@ -3,9 +3,11 @@ import * as rails from "@/rails";
 import {Interval} from "@/components/Interval";
 import {RTrain} from "@/components/RTrain";
 
+type IdentifiedTrains = { id: number, train: rails.Train | null }[];
+
 interface RTrainsProps {
   grid: rails.Grid,
-  trains: {id: number, train: rails.Train | null}[],
+  trains: IdentifiedTrains,
   onTrainUpdate: (id: number, train: rails.Train | null) => void,
 }
 
@@ -37,13 +39,13 @@ export class RTrains extends Component<RTrainsProps, {}> {
   };
 
   progressTrains = () => {
-    let trainsToUpdate: {id: number, train: rails.Train | null}[] = this.props.trains;
+    let trainsToUpdate: IdentifiedTrains = this.props.trains;
     trainsToUpdate = this.animateTrains(trainsToUpdate);
     trainsToUpdate = this.removeCollidedTrains(trainsToUpdate);
     this.updateTrains(trainsToUpdate);
   };
 
-  animateTrains(trains: {id: number, train: rails.Train | null}[]): {id: number, train: rails.Train | null}[] {
+  animateTrains(trains: IdentifiedTrains): IdentifiedTrains {
     const {grid} = this.props;
     return trains
       .filter(({train}) => train)
@@ -53,7 +55,7 @@ export class RTrains extends Component<RTrainsProps, {}> {
       }));
   }
 
-  removeCollidedTrains(trains: {id: number, train: rails.Train | null}[]): {id: number, train: rails.Train | null}[] {
+  removeCollidedTrains(trains: IdentifiedTrains): IdentifiedTrains {
     const collidedTrains: rails.Train[] = rails.trains.getCollidedTrains(trains.map(({train}) => train!));
     if (!collidedTrains.length) {
       return trains;
@@ -64,7 +66,7 @@ export class RTrains extends Component<RTrainsProps, {}> {
     }));
   }
 
-  updateTrains(trains: {id: number, train: rails.Train | null}[]) {
+  updateTrains(trains: IdentifiedTrains) {
     for (const {id, train} of trains) {
       this.props.onTrainUpdate(id, train);
     }
