@@ -22,6 +22,29 @@ class Positions {
       y: first.y * firstScale + second.y * secondScale,
     };
   }
+
+  checkSegmentIntersection(firstStart: Position, firstEnd: Position, secondStart: Position, secondEnd: Position): boolean {
+    const first = this.add(firstEnd, firstStart, 1, -1);
+    const second = this.add(secondEnd, secondStart, 1, -1);
+
+    const crossFirstSecond = this.crossProduct(first, second);
+    if (crossFirstSecond === 0) {
+      const firstLength = this.getPointDistance(firstStart, firstEnd);
+      return (
+        (firstLength === (this.getPointDistance(firstStart, secondStart) + this.getPointDistance(secondStart, firstEnd)))
+        || (firstLength === (this.getPointDistance(firstStart, secondEnd) + this.getPointDistance(secondEnd, firstEnd)))
+      );
+    }
+    const startsDifference = this.add(firstStart, secondStart, 1, -1);
+    const firstParameter = this.crossProduct(first, startsDifference) / crossFirstSecond;
+    const secondParameter = this.crossProduct(second, startsDifference) / crossFirstSecond;
+
+    return firstParameter >= 0 && firstParameter <= 1 && secondParameter >= 0 && secondParameter <= 1;
+  }
+
+  crossProduct(first: Position, second: Position): number {
+    return first.x * second.y - second.x * first.y;
+  }
 }
 
 export const positions = new Positions();
