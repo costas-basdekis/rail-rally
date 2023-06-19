@@ -1,9 +1,11 @@
 .train {
   fill: red;
+  pointer-events: none;
 }
 
 .train-line {
   stroke: red;
   fill: none;
   stroke-width: 3;
+  pointer-events: none;
 }

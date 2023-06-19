@@ -3,6 +3,7 @@ import {RTile} from "@/components/RTile";
 import * as rails from "@/rails";
 // noinspection TypeScriptCheckImport
 import Iterator from "core-js-pure/actual/iterator";
+import "./RGrid.scss";
 
 interface RGridProps {
   grid: rails.Grid,
@@ -47,27 +48,31 @@ export class RGrid extends Component<RGridProps, RGridState> {
   render() {
     const {grid, editable, mode} = this.props;
     const {selectedTile, connectableTiles, searchStart, searchEnd, tileConnectionsOnSearchPath} = this.state;
-    return [
-      ...Iterator.from(grid.tiles()).map(tile => (
-        <RTile.Background
-          key={`${tile.positionStr}-background`}
-          editable={editable}
-          tile={tile}
-          selected={mode === "build" ? selectedTile === tile : [searchStart, searchEnd].includes(tile)}
-          connectable={connectableTiles.includes(tile)}
-          onTileClick={this.onTileClick}
-          onMouseEnter={mode === "search" ? this.onTileMouseEnter : undefined}
-          onMouseOut={mode === "search" ? this.onTileMouseOut : undefined}
-        />
-      )),
-      ...Iterator.from(grid.tiles()).map(tile => (
-        <RTile.Connections
-          key={`${tile.positionStr}-connections`}
-          tile={tile}
-          highlightedConnections={tileConnectionsOnSearchPath[tile.positionStr]}
-        />
-      )),
-    ];
+    return <>
+      <g className={"grid-background"}>
+        {Iterator.from(grid.tiles()).map(tile => (
+          <RTile.Background
+            key={`${tile.positionStr}-background`}
+            editable={editable}
+            tile={tile}
+            selected={mode === "build" ? selectedTile === tile : [searchStart, searchEnd].includes(tile)}
+            connectable={connectableTiles.includes(tile)}
+            onTileClick={this.onTileClick}
+            onMouseEnter={mode === "search" ? this.onTileMouseEnter : undefined}
+            onMouseOut={mode === "search" ? this.onTileMouseOut : undefined}
+          />
+        )).toArray()}
+      </g>
+      <g className={"grid-connections"}>
+        {Iterator.from(grid.tiles()).map(tile => (
+          <RTile.Connections
+            key={`${tile.positionStr}-connections`}
+            tile={tile}
+            highlightedConnections={tileConnectionsOnSearchPath[tile.positionStr]}
+          />
+        )).toArray()}
+      </g>
+    </>;
   }
 
   onTileClick = (tile: rails.Tile) => {
