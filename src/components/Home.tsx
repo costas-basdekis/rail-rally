@@ -1,27 +1,33 @@
 import styles from "@/components/Home.module.scss";
 import {About, RGrid, RSerialisedGrids, RTrains} from "@/components";
-import {Component} from "react";
+import {Component, SyntheticEvent} from "react";
 import * as rails from "@/rails";
 import _ from "underscore";
 
 interface HomeState {
   grid: rails.Grid,
   trains: {id: number, train: rails.Train | null}[],
+  mode: "build" | "search",
 }
 
 export class Home extends Component<object, HomeState>{
   state: HomeState = {
     grid: rails.Grid.fromSize(20, 20),
     trains: _.range(4).map(index => ({id: index + 1, train: null})),
+    mode: "build",
   };
 
   render() {
-    const {grid, trains} = this.state;
+    const {grid, trains, mode} = this.state;
     return (
       <main className={styles.main}>
         <h1>Rail Rally</h1>
         <RSerialisedGrids grid={grid} onGridUpdate={this.onGridUpdate} />
         <button onClick={this.onNewGridClick}>New</button>
+        <div>
+          <label><input type={"radio"} value={"build"} checked={mode === "build"} onChange={this.onModeChange}/>Build</label>
+          <label><input type={"radio"} value={"search"} checked={mode === "search"} onChange={this.onModeChange}/>Search</label>
+        </div>
         <div>
           <label>Trains: {trains.length}</label>
           {" "}
@@ -30,7 +36,7 @@ export class Home extends Component<object, HomeState>{
           <button onClick={this.onAddTrainClick}>+</button>
         </div>
         <svg width={400} height={400} style={{backgroundColor: "white"}}>
-          <RGrid grid={grid} />
+          <RGrid grid={grid} mode={mode} />
           <RTrains grid={grid} trains={trains} onTrainUpdate={this.onTrainUpdate} />
         </svg>
         <About/>
@@ -81,4 +87,8 @@ export class Home extends Component<object, HomeState>{
       };
     });
   }
+
+  onModeChange = ({target: {value}}: SyntheticEvent<HTMLInputElement, Event>) => {
+    this.setState<"mode">({mode: value});
+  };
 }
