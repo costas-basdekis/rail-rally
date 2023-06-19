@@ -268,3 +268,33 @@ export class Train implements TrainInit {
     });
   }
 }
+
+class Trains {
+  getCollidedTrains(trains: Train[]): Train[] {
+    const segments: [Train, Position, Position][] = trains.map(
+      train => train.cars.slice(1).map(
+        (car, previousIndex) => (
+          [train, train.cars[previousIndex].pointPosition, car.pointPosition] as [Train, Position, Position]
+        ))).flat();
+    const collidedTrains: Set<Train> = new Set();
+    for (const firstIndex of _.range(segments.length)) {
+      const [firstTrain, firstStart, firstEnd] = segments[firstIndex];
+      for (const secondIndex of _.range(firstIndex + 1, segments.length)) {
+        const [secondTrain, secondStart, secondEnd] = segments[secondIndex];
+        if (collidedTrains.has(firstTrain) && collidedTrains.has(secondTrain)) {
+          continue;
+        }
+        if (firstTrain === secondTrain && firstEnd === secondStart) {
+          continue;
+        }
+        if (positions.checkSegmentIntersection(firstStart, firstEnd, secondStart, secondEnd)) {
+          collidedTrains.add(firstTrain);
+          collidedTrains.add(secondTrain);
+        }
+      }
+    }
+    return Array.from(collidedTrains);
+  }
+}
+
+export const trains = new Trains();

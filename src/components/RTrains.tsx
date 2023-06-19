@@ -6,7 +6,7 @@ import {RTrain} from "@/components/RTrain";
 interface RTrainsProps {
   grid: rails.Grid,
   trains: {id: number, train: rails.Train | null}[],
-  onTrainUpdate: (id: number, train: rails.Train) => void,
+  onTrainUpdate: (id: number, train: rails.Train | null) => void,
 }
 
 export class RTrains extends Component<RTrainsProps, {}> {
@@ -15,7 +15,7 @@ export class RTrains extends Component<RTrainsProps, {}> {
 
     return <>
       <Interval method={this.recheckTrains} timeout={1000} restartGuard={trains.some(({train}) => train === null)} />
-      <Interval method={this.animateTrains} timeout={100} restartGuard={trains.some(({train}) => train !== null)} />
+      <Interval method={this.progressTrains} timeout={100} restartGuard={trains.some(({train}) => train !== null)} />
       {trains.filter(({train}) => train).map(({id, train}) => (
         <RTrain key={id} train={train!} />
       ))}
@@ -36,13 +36,37 @@ export class RTrains extends Component<RTrainsProps, {}> {
     }
   };
 
-  animateTrains = () => {
-    const {grid, trains} = this.props;
-    for (const {id, train} of trains) {
-      if (!train) {
-        continue;
-      }
-      this.props.onTrainUpdate(id, train!.animate(grid));
-    }
+  progressTrains = () => {
+    let trainsToUpdate: {id: number, train: rails.Train | null}[] = this.props.trains;
+    trainsToUpdate = this.animateTrains(trainsToUpdate);
+    trainsToUpdate = this.removeCollidedTrains(trainsToUpdate);
+    this.updateTrains(trainsToUpdate);
   };
+
+  animateTrains(trains: {id: number, train: rails.Train | null}[]): {id: number, train: rails.Train | null}[] {
+    const {grid} = this.props;
+    return trains
+      .filter(({train}) => train)
+      .map(({id, train}) => ({
+        id,
+        train: train!.animate(grid),
+      }));
+  }
+
+  removeCollidedTrains(trains: {id: number, train: rails.Train | null}[]): {id: number, train: rails.Train | null}[] {
+    const collidedTrains: rails.Train[] = rails.trains.getCollidedTrains(trains.map(({train}) => train!));
+    if (!collidedTrains.length) {
+      return trains;
+    }
+    return trains.map(({id, train}) => ({
+      id,
+      train: (!train || collidedTrains.includes(train)) ? null : train,
+    }));
+  }
+
+  updateTrains(trains: {id: number, train: rails.Train | null}[]) {
+    for (const {id, train} of trains) {
+      this.props.onTrainUpdate(id, train);
+    }
+  }
 }

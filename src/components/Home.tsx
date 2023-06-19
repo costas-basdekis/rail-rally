@@ -38,7 +38,7 @@ export class Home extends Component<object, HomeState>{
     );
   }
 
-  onTrainUpdate = (id: number, train: rails.Train) => {
+  onTrainUpdate = (id: number, train: rails.Train | null) => {
     this.setState<"trains">(({trains}) => ({
       trains: trains.map(entry => entry.id === id ? {id, train} : entry),
     }));
