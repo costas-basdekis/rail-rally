@@ -13,12 +13,22 @@ class RTileBackground extends Component<RTileProps, {}> {
         className={classNames("tile", {selected, connectable, editable: editable ?? true})}
         transform={`translate(${tile.x * 20}, ${tile.y * 20})`}
         onClick={(editable ?? true) ? this.onSelectTile : undefined}
+        onMouseEnter={this.props.onMouseEnter ? this.onMouseEnter : undefined}
+        onMouseOut={this.props.onMouseOut ? this.onMouseOut : undefined}
       />
     );
   }
 
   onSelectTile = () => {
     this.props.onTileClick(this.props.tile);
+  };
+
+  onMouseEnter = () => {
+    this.props?.onMouseEnter?.(this.props.tile);
+  };
+
+  onMouseOut = () => {
+    this.props?.onMouseOut?.(this.props.tile);
   };
 }
 
@@ -74,6 +84,8 @@ interface RTileProps {
   selected: boolean,
   connectable: boolean,
   onTileClick: (tile: rails.Tile) => void,
+  onMouseEnter?: ((tile: rails.Tile) => void) | undefined,
+  onMouseOut?: ((tile: rails.Tile) => void) | undefined,
 }
 
 export class RTile extends Component<RTileProps, {}> {

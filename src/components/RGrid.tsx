@@ -56,6 +56,8 @@ export class RGrid extends Component<RGridProps, RGridState> {
           selected={mode === "build" ? selectedTile === tile : [searchStart, searchEnd].includes(tile)}
           connectable={connectableTiles.includes(tile)}
           onTileClick={this.onTileClick}
+          onMouseEnter={mode === "search" ? this.onTileMouseEnter : undefined}
+          onMouseOut={mode === "search" ? this.onTileMouseOut : undefined}
         />
       )),
       ...Iterator.from(grid.tiles()).map(tile => (
@@ -77,7 +79,8 @@ export class RGrid extends Component<RGridProps, RGridState> {
         this.onSearchTileClick(tile);
         break;
     }
-  }
+  };
+
   onBuildTileClick = (tile: rails.Tile) => {
     this.setState<"selectedTile" | "connectableTiles">(({selectedTile, connectableTiles}) => {
       const {grid} = this.props;
@@ -111,15 +114,37 @@ export class RGrid extends Component<RGridProps, RGridState> {
     this.setState<"searchStart" | "searchEnd" | "searchPath" | "tileConnectionsOnSearchPath">(({searchStart, searchEnd}) => {
       if (!searchStart || searchEnd) {
         return {searchStart: tile, searchEnd: null, searchPath: null, tileConnectionsOnSearchPath: {}};
-      } else {
+      }
+    });
+  }
+
+  onTileMouseEnter = (tile: rails.Tile) => {
+    if (this.props.mode !== "search") {
+      return;
+    }
+    this.setState<"searchEnd" | "searchPath" | "tileConnectionsOnSearchPath">(({searchStart, searchEnd}) => {
+      if (tile === searchStart || tile === searchEnd) {
+        return {searchEnd: null, searchPath: null, tileConnectionsOnSearchPath: {}};
+      } else if (searchStart) {
         const searchPath = rails.PathFinder.findBestPath(this.props.grid, searchStart, tile);
         const tileConnectionsOnSearchPath = {};
         for (const node of searchPath ?? []) {
           tileConnectionsOnSearchPath[node.tile.positionStr] = tileConnectionsOnSearchPath[node.tile.positionStr] ?? [];
           tileConnectionsOnSearchPath[node.tile.positionStr].push(node);
         }
-        return {searchStart, searchEnd: tile, searchPath: searchPath, tileConnectionsOnSearchPath};
+        return {searchEnd: tile, searchPath: searchPath, tileConnectionsOnSearchPath};
       }
     });
-  }
+  };
+
+  onTileMouseOut = (tile: rails.Tile) => {
+    if (this.props.mode !== "search") {
+      return;
+    }
+    this.setState<"searchEnd" | "searchPath" | "tileConnectionsOnSearchPath">(({searchEnd}) => {
+      if (tile === searchEnd) {
+        return {searchEnd: null, searchPath: null, tileConnectionsOnSearchPath: {}};
+      }
+    });
+  };
 }
