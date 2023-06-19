@@ -1,5 +1,5 @@
 import styles from "@/components/Home.module.scss";
-import {About, RGrid, RSerialisedGrids, RTrain} from "@/components";
+import {About, RGrid, RSerialisedGrids, RTrains} from "@/components";
 import {Component} from "react";
 import * as rails from "@/rails";
 import _ from "underscore";
@@ -31,9 +31,7 @@ export class Home extends Component<object, HomeState>{
         </div>
         <svg width={400} height={400} style={{backgroundColor: "white"}}>
           <RGrid grid={grid} />
-          {trains.map(({id, train}) => (
-            <RTrain key={id} grid={grid} id={id} train={train} onTrainUpdate={this.onTrainUpdate} />
-          ))}
+          <RTrains grid={grid} trains={trains} onTrainUpdate={this.onTrainUpdate} />
         </svg>
         <About/>
       </main>
